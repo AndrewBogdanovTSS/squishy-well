@@ -18,8 +18,8 @@ import {
 } from 'three/tsl'
 import type { Cell, PieceType } from '@tetris/core'
 import { liveFeel } from '~/config/feel'
-import { FLOOR_Y, worldX, worldY } from '~/utils/three'
-import { asFloat, asVec3, asVec4 } from '~/utils/tsl'
+import { FLOOR_Y, worldX, worldY } from '~/lib/three'
+import { asFloat, asVec3, asVec4 } from '~/lib/tsl'
 import { PALETTE } from '~/config/palette'
 
 export interface ShatterVFX {

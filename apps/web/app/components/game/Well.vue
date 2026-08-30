@@ -3,7 +3,7 @@ import { onBeforeUnmount } from 'vue'
 import * as THREE from 'three/webgpu'
 import { COLS, VISIBLE_ROWS } from '@tetris/core'
 import { GRID_COLOR, WELL_COLOR } from '~/config/palette'
-import { worldX, worldY } from '~/utils/three'
+import { worldX, worldY } from '~/lib/three'
 
 /** The container: back wall, floor, side rails and a faint cell grid. */
 const group = new THREE.Group()

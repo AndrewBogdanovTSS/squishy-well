@@ -3,9 +3,12 @@ import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { createGameSession, GameSessionKey } from '~/composables/useGameSession'
 import { attachTouchControls } from '~/composables/useInput'
 import { useSettings } from '~/stores/settings'
-import GameCanvas from '~/components/game/GameCanvas.client.vue'
 import GameHud from '~/components/hud/GameHud.vue'
-import TweakPanel from '~/components/debug/TweakPanel.client.vue'
+
+// GameCanvas and DebugTweakPanel are deliberately NOT imported here: they are
+// `.client.vue` files, and Nuxt only wraps them as client-only components when
+// they come from auto-import. A direct import returns the bare component and
+// silently defeats the suffix.
 
 useHead({ title: 'NEON WELL — play' })
 
@@ -170,7 +173,7 @@ onBeforeUnmount(() => {
       </aside>
     </transition>
 
-    <TweakPanel v-if="isDev" />
+    <DebugTweakPanel v-if="isDev" />
   </main>
 </template>
 

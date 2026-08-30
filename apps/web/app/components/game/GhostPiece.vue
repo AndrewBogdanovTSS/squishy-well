@@ -4,7 +4,7 @@ import * as THREE from 'three/webgpu'
 import { useLoop } from '@tresjs/core'
 import { GameSessionKey } from '~/composables/useGameSession'
 import { PALETTE } from '~/config/palette'
-import { worldX, worldY } from '~/utils/three'
+import { worldX, worldY } from '~/lib/three'
 
 const session = inject(GameSessionKey)!
 

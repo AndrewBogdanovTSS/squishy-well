@@ -7,8 +7,8 @@ import { cellsOf } from '@tetris/core'
 import { GameSessionKey } from '~/composables/useGameSession'
 import { PALETTE, PALETTE_ACCESSIBLE } from '~/config/palette'
 import { liveFeel } from '~/config/feel'
-import { asVec3 } from '~/utils/tsl'
-import { blockGeometry, worldX, worldY } from '~/utils/three'
+import { asVec3 } from '~/lib/tsl'
+import { blockGeometry, worldX, worldY } from '~/lib/three'
 
 const props = withDefaults(defineProps<{ accessible?: boolean }>(), { accessible: false })
 const session = inject(GameSessionKey)!
