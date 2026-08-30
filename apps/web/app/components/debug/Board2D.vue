@@ -1,0 +1,128 @@
+<script setup lang="ts">
+import { onMounted, onBeforeUnmount, ref, inject } from 'vue'
+import { COLS, VISIBLE_ROWS, codeToType, idx } from '@tetris/core'
+import { GameSessionKey } from '~/composables/useGameSession'
+import { GHOST_COLOR, PALETTE } from '~/config/palette'
+
+/**
+ * The 2D debug renderer. It draws exactly the same state the 3D scene does,
+ * which makes it the fastest way to tell "is this a logic bug or a render bug".
+ * It is also fully deterministic, so it is what visual snapshots are taken of.
+ */
+const props = withDefaults(defineProps<{ cell?: number; showGrid?: boolean }>(), {
+  cell: 24,
+  showGrid: true,
+})
+
+const session = inject(GameSessionKey)!
+const canvas = ref<HTMLCanvasElement | null>(null)
+let raf = 0
+
+function draw(): void {
+  raf = requestAnimationFrame(draw)
+  const el = canvas.value
+  if (!el) return
+  const ctx = el.getContext('2d')
+  if (!ctx) return
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  const w = COLS * props.cell
+  const h = VISIBLE_ROWS * props.cell
+  if (el.width !== w * dpr || el.height !== h * dpr) {
+    el.width = w * dpr
+    el.height = h * dpr
+    el.style.width = `${w}px`
+    el.style.height = `${h}px`
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+  ctx.clearRect(0, 0, w, h)
+
+  ctx.fillStyle = '#080c16'
+  ctx.fillRect(0, 0, w, h)
+
+  if (props.showGrid) {
+    ctx.strokeStyle = 'rgba(148,163,184,0.10)'
+    ctx.lineWidth = 1
+    for (let x = 1; x < COLS; x++) {
+      ctx.beginPath()
+      ctx.moveTo(x * props.cell + 0.5, 0)
+      ctx.lineTo(x * props.cell + 0.5, h)
+      ctx.stroke()
+    }
+    for (let y = 1; y < VISIBLE_ROWS; y++) {
+      ctx.beginPath()
+      ctx.moveTo(0, y * props.cell + 0.5)
+      ctx.lineTo(w, y * props.cell + 0.5)
+      ctx.stroke()
+    }
+  }
+
+  const px = (bx: number) => bx * props.cell
+  const py = (by: number) => (VISIBLE_ROWS - 1 - by) * props.cell
+
+  const board = session.board
+  const clearing = session.clearAnim.value
+  const flashRows = clearing && !clearing.removed ? new Set(clearing.rows) : null
+  const flashPhase = clearing ? (performance.now() - clearing.startedAt) / clearing.durationMs : 0
+
+  for (let y = 0; y < VISIBLE_ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const v = board[idx(x, y)]
+      if (!v) continue
+      const isFlashing = flashRows?.has(y)
+      ctx.fillStyle = isFlashing
+        ? flashPhase < 0.3
+          ? '#ffffff'
+          : `rgba(255,255,255,${Math.max(0, 1 - flashPhase * 1.6)})`
+        : PALETTE[codeToType(v)]
+      ctx.fillRect(px(x) + 1, py(y) + 1, props.cell - 2, props.cell - 2)
+    }
+  }
+
+  // ghost
+  ctx.save()
+  ctx.globalAlpha = 0.28
+  for (const c of session.engine.ghostCells()) {
+    if (c.y >= VISIBLE_ROWS) continue
+    ctx.fillStyle = GHOST_COLOR
+    ctx.fillRect(px(c.x) + 2, py(c.y) + 2, props.cell - 4, props.cell - 4)
+  }
+  ctx.restore()
+
+  // active piece
+  for (const c of session.engine.activeCells()) {
+    if (c.y >= VISIBLE_ROWS) continue
+    ctx.fillStyle = PALETTE[c.type]
+    ctx.fillRect(px(c.x) + 1, py(c.y) + 1, props.cell - 2, props.cell - 2)
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)'
+    ctx.strokeRect(px(c.x) + 1.5, py(c.y) + 1.5, props.cell - 3, props.cell - 3)
+  }
+
+  if (session.paused.value || session.gameOver.value) {
+    ctx.fillStyle = 'rgba(5,7,13,0.72)'
+    ctx.fillRect(0, 0, w, h)
+    ctx.fillStyle = '#e2e8f0'
+    ctx.font = '600 20px ui-monospace, monospace'
+    ctx.textAlign = 'center'
+    ctx.fillText(session.gameOver.value ? 'GAME OVER' : 'PAUSED', w / 2, h / 2)
+  }
+}
+
+onMounted(() => {
+  raf = requestAnimationFrame(draw)
+})
+onBeforeUnmount(() => cancelAnimationFrame(raf))
+</script>
+
+<template>
+  <canvas ref="canvas" class="board2d" aria-hidden="true" />
+</template>
+
+<style scoped>
+.board2d {
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  image-rendering: pixelated;
+}
+</style>

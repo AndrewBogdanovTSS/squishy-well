@@ -1,0 +1,24 @@
+{
+  "name": "tetris-webgpu",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "dev": "pnpm --filter @tetris/web dev",
+    "build": "pnpm --filter @tetris/web build",
+    "test": "pnpm --filter @tetris/core test",
+    "test:watch": "pnpm --filter @tetris/core test:watch",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "test:e2e": "pnpm --filter @tetris/web test:e2e"
+  },
+  "devDependencies": {
+    "eslint": "^10.8.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.67.0"
+  },
+  "volta": {
+    "node": "26.8.1",
+    "pnpm": "11.25.0"
+  }
+}
