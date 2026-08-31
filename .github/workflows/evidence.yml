@@ -1,0 +1,60 @@
+name: evidence
+
+# The trigger. Every check in this repository is worth exactly as much as this
+# file: a rule nothing runs is decoration, and until this workflow existed the
+# whole evidence layer was a set of commands somebody had to remember.
+#
+# It runs in warn-only mode. Findings are printed in full and the build stays
+# green, which is deliberate - a gate switched on before its report is clean
+# teaches people to route around it. Flipping to enforcing is one word:
+# add `--enforce` to the governance step and delete its `continue-on-error`.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The full history, not a shallow clone. `check:receipt` resolves a
+          # merge-base, and a shallow clone cannot - it would report
+          # `unverifiable`, which is honest but useless as a gate.
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint and typecheck
+        run: |
+          pnpm lint
+          pnpm typecheck
+
+      - name: Engine tests
+        run: pnpm test
+
+      - name: Checker tests
+        run: pnpm test:scripts
+
+      # The demo fixtures are regression tests for the checkers themselves: the
+      # repaired review must stay clean, and the broken one must stay broken. A
+      # checker that silently stops finding things is worse than no checker.
+      - name: Demo fixtures still behave as documented
+        run: |
+          sh demo/setup-refs.sh
+          pnpm check:claims demo/reviews/good-claims.md
+          pnpm check:receipt demo/reviews/good-receipt.md
+          ! pnpm check:claims demo/reviews/bad-claims.md
+          ! pnpm check:receipt demo/reviews/bad-receipt.md
+
+      - name: Governance
+        continue-on-error: true
+        run: pnpm check:all

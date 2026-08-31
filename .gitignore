@@ -9,3 +9,7 @@ coverage/
 .env
 .vite/
 .idea/
+
+# Evidence bundles and review drafts. Generated per change, never committed:
+# a bundle is only evidence for the commit it was gathered at.
+*.local.md

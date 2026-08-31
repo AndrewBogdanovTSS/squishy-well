@@ -8,14 +8,25 @@
     "build": "pnpm --filter @tetris/web build",
     "test": "pnpm --filter @tetris/core test",
     "test:watch": "pnpm --filter @tetris/core test:watch",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "tsc -p tsconfig.scripts.json && pnpm -r typecheck",
     "lint": "eslint .",
-    "test:e2e": "pnpm --filter @tetris/web test:e2e"
+    "test:e2e": "pnpm --filter @tetris/web test:e2e",
+    "check:docs": "tsx scripts/check-docs.ts",
+    "check:claims": "tsx scripts/check-claims.ts",
+    "check:receipt": "tsx scripts/check-receipt.ts",
+    "check:all": "tsx scripts/governance.ts",
+    "evidence": "tsx scripts/gather-evidence.ts",
+    "fingerprint": "tsx scripts/fingerprint.ts",
+    "test:scripts": "vitest run --config vitest.scripts.config.ts",
+    "hooks:install": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
+    "@types/node": "^22.19.1",
     "eslint": "^10.8.0",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.67.0"
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^4.1.10"
   },
   "volta": {
     "node": "26.8.1",

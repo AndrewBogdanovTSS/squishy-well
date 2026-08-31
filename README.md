@@ -10,6 +10,12 @@ packages/tetris-core   pure TypeScript engine — no Vue, no Three, no DOM, no c
 apps/web               Nuxt 4 app: TresJS scene, TSL effects, HUD, 2D debug renderer
 ```
 
+> The numbers in this README are claims about the repository, and claims that
+> nothing checks go stale in silence. `pnpm check:docs` checks them - the test
+> count, the fixture's shape, the routes, the pinned versions. See
+> [`docs/evidence-layer.md`](docs/evidence-layer.md) for that and the five other
+> commands around it.
+
 ## Quick start
 
 ```bash
@@ -19,6 +25,10 @@ pnpm dev           # http://localhost:3000
 pnpm build
 pnpm typecheck
 pnpm lint
+
+pnpm check:docs    # are this README's claims still true?
+pnpm fingerprint   # did engine behaviour change?
+pnpm check:all     # and does anything actually run these?
 ```
 
 ### Version pinning

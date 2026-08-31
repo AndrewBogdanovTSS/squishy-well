@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+# Runs the governance checks before a push.
+#
+# Enable with:  pnpm hooks:install   (which sets core.hooksPath to .githooks)
+#
+# This is defence in depth, not a gate. Anyone can bypass it with `--no-verify`,
+# and saying so plainly is better than implying a guarantee this cannot give. The
+# gate is the CI workflow, which runs on a machine nobody can pass a flag to.
+#
+# `--fast` skips the test suite and the build measurement: a pre-push hook that
+# takes a minute is a pre-push hook people disable.
+set -eu
+
+echo "pre-push: governance checks (warn-only, --fast)"
+pnpm check:all --fast
