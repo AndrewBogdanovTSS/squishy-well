@@ -13,6 +13,7 @@ The full tour, with the reasoning: [`docs/evidence-layer.md`](../docs/evidence-l
 | `check-claims.ts` | `pnpm check:claims <file>` | the grounding tags in a review |
 | `check-receipt.ts` | `pnpm check:receipt <file>` | "I read the code" |
 | `governance.ts` | `pnpm check:all` | "this is enforced" |
+| `ci-summary.ts` | `pnpm ci:summary <log>` | "the checks ran" |
 
 `lib/` holds the three pieces they share:
 

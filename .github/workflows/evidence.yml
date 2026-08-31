@@ -1,42 +1,57 @@
 name: evidence
 
-# The trigger. Every check in this repository is worth exactly as much as this
-# file: a rule nothing runs is decoration, and until this workflow existed the
-# whole evidence layer was a set of commands somebody had to remember.
+# The trigger.
 #
-# It runs in warn-only mode. Findings are printed in full and the build stays
-# green, which is deliberate - a gate switched on before its report is clean
-# teaches people to route around it. Flipping to enforcing is one word:
-# add `--enforce` to the governance step and delete its `continue-on-error`.
+# Every check in this repository is worth exactly as much as this file. A rule
+# nothing runs is decoration, and until this workflow existed the whole evidence
+# layer was a set of commands somebody had to remember.
+#
+# It also settles a conflict of interest. Every check here can be run by the
+# person writing the change, which means a passing local run is a self-report:
+# whoever skipped the gathering step skips the verifying step just as easily.
+# This file is the independent runner. Same commands, different party.
+#
+# Governance is warn-only for now. Findings are printed in full and the build
+# stays green, deliberately - a gate switched on before its report is clean
+# teaches people to route around it. Flipping to enforcing is one flag: add
+# `--enforce` to the governance step and delete its `continue-on-error`.
 
 on:
   push:
     branches: [master]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
-  evidence:
+  # ---------------------------------------------------------------------------
+  # The ordinary gates. Nothing novel here - it is the baseline the evidence
+  # layer sits on top of, and it fails the build like any other project's CI.
+  # ---------------------------------------------------------------------------
+  build:
+    name: lint, types, tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          # The full history, not a shallow clone. `check:receipt` resolves a
-          # merge-base, and a shallow clone cannot - it would report
-          # `unverifiable`, which is honest but useless as a gate.
-          fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4 # version comes from packageManager in package.json
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Reads volta.node from package.json, so CI runs the Node this repo
+          # pins rather than whatever CI happens to default to.
+          node-version-file: package.json
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Lint and typecheck
-        run: |
-          pnpm lint
-          pnpm typecheck
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
 
       - name: Engine tests
         run: pnpm test
@@ -44,17 +59,105 @@ jobs:
       - name: Checker tests
         run: pnpm test:scripts
 
-      # The demo fixtures are regression tests for the checkers themselves: the
-      # repaired review must stay clean, and the broken one must stay broken. A
-      # checker that silently stops finding things is worse than no checker.
-      - name: Demo fixtures still behave as documented
-        run: |
-          sh demo/setup-refs.sh
-          pnpm check:claims demo/reviews/good-claims.md
-          pnpm check:receipt demo/reviews/good-receipt.md
-          ! pnpm check:claims demo/reviews/bad-claims.md
-          ! pnpm check:receipt demo/reviews/bad-receipt.md
+  # ---------------------------------------------------------------------------
+  # The evidence layer. Every check is its own named step on purpose: the run
+  # page then reads as a list of claims that were checked, rather than one opaque
+  # green tick you have to open a log to understand.
+  # ---------------------------------------------------------------------------
+  evidence:
+    name: evidence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history, not a shallow clone. `check:receipt` resolves a
+          # merge-base, and a shallow clone cannot - it would report
+          # `unverifiable`, which is honest but useless as a gate.
+          fetch-depth: 0
 
-      - name: Governance
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Set up the demo references
+        run: sh demo/setup-refs.sh
+
+      # --- Claims -------------------------------------------------------------
+      - name: A grounded review passes the claim linter
+        run: pnpm check:claims demo/reviews/good-claims.md
+
+      - name: An ungrounded review still fails it
+        # The negative case matters as much as the positive one. A checker that
+        # quietly stops finding things is worse than no checker, because nobody
+        # notices. If this step ever goes green, the linter is broken.
+        run: |
+          if pnpm check:claims demo/reviews/bad-claims.md; then
+            echo "::error::the broken review passed - the claim linter has stopped working"
+            exit 1
+          fi
+          echo "the broken review was rejected, as it should be"
+
+      # --- Access receipts ----------------------------------------------------
+      - name: A valid access receipt passes
+        run: pnpm check:receipt demo/reviews/good-receipt.md
+
+      - name: A stale baseline is caught
+        run: |
+          if pnpm check:receipt demo/reviews/bad-receipt.md; then
+            echo "::error::the stale-baseline receipt passed - the receipt check has stopped working"
+            exit 1
+          fi
+          echo "the stale baseline was rejected, as it should be"
+
+      # --- The repository's own claims ---------------------------------------
+      - name: The README still tells the truth
+        run: pnpm check:docs
+
+      - name: Engine behaviour is unchanged
+        run: pnpm fingerprint
+
+      # --- And the check that checks the checks -------------------------------
+      - name: Governance - is anything actually running these?
+        id: governance
         continue-on-error: true
-        run: pnpm check:all
+        run: |
+          set -o pipefail
+          pnpm check:all | tee governance.log
+
+      - name: Render the report
+        if: always()
+        # This is what the delimited JSON block in check:all exists for. If the
+        # block is missing the summary says so rather than printing nothing:
+        # "no report" and "clean report" must never look the same.
+        run: pnpm ci:summary governance.log >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment the report on the pull request
+        # Skipped for pull requests from forks, where the token is read-only.
+        if: >-
+          always() && github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const { execSync } = require('child_process')
+            const body =
+              execSync('pnpm --silent ci:summary governance.log', { encoding: 'utf8' }) +
+              '\n<!-- evidence-layer-report -->\n'
+
+            const { owner, repo } = context.repo
+            const issue_number = context.issue.number
+            const comments = await github.rest.issues.listComments({ owner, repo, issue_number })
+            const mine = comments.data.find((c) => c.body.includes('<!-- evidence-layer-report -->'))
+
+            // One comment, updated in place. A new comment per push turns the
+            // pull request into a scroll of stale verdicts.
+            if (mine) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body })
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body })
+            }

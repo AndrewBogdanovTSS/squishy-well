@@ -15,6 +15,7 @@
     "check:claims": "tsx scripts/check-claims.ts",
     "check:receipt": "tsx scripts/check-receipt.ts",
     "check:all": "tsx scripts/governance.ts",
+    "ci:summary": "tsx scripts/ci-summary.ts",
     "evidence": "tsx scripts/gather-evidence.ts",
     "fingerprint": "tsx scripts/fingerprint.ts",
     "test:scripts": "vitest run --config vitest.scripts.config.ts",

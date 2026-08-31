@@ -49,12 +49,12 @@ pnpm config set minimumReleaseAgeExclude three
 
 Routes:
 
-| route | what it is |
-|---|---|
-| `/` | landing page, prerendered, no Three in the bundle |
-| `/play` | the game (`ssr: false`) |
+| route         | what it is                                             |
+|---------------|--------------------------------------------------------|
+| `/`           | landing page, prerendered, no Three in the bundle      |
+| `/play`       | the game (`ssr: false`)                                |
 | `/play?bot=1` | the heuristic bot plays — attract mode and e2e harness |
-| `/debug` | the 2D reference renderer, step/pause/replay tools |
+| `/debug`      | the 2D reference renderer, step/pause/replay tools     |
 
 Keys: `← →` move · `↓` soft drop · `space` hard drop · `Z`/`X` rotate · `A` 180 ·
 `C`/`shift` hold · `P` pause · `R` restart. Everything is remappable; gamepad and
@@ -96,12 +96,12 @@ The boundary is enforced by `eslint.config.js`, not by convention: importing
 
 ### Reactivity policy
 
-| data | storage | why |
-|---|---|---|
-| board (`Uint8Array`) | raw + `boardVersion` counter | 200 cells through a deep proxy at 60 Hz is pure waste |
-| active piece | raw, read every frame | the renderer interpolates it itself |
-| score / level / next / hold | `reactive` HUD object | changes rarely, goes to the DOM |
-| settings, high scores | Pinia + localStorage | ordinary app state, which is what Pinia is for |
+| data                        | storage                      | why                                                   |
+|-----------------------------|------------------------------|-------------------------------------------------------|
+| board (`Uint8Array`)        | raw + `boardVersion` counter | 200 cells through a deep proxy at 60 Hz is pure waste |
+| active piece                | raw, read every frame        | the renderer interpolates it itself                   |
+| score / level / next / hold | `reactive` HUD object        | changes rarely, goes to the DOM                       |
+| settings, high scores       | Pinia + localStorage         | ordinary app state, which is what Pinia is for        |
 
 The HUD is DOM on top of the canvas, not 3D text: cheaper, selectable, and it
 reaches a screen reader (`aria-live` on score, `role="status"` on level).
@@ -126,12 +126,12 @@ reaches a screen reader (`aria-live` on score, `role="status"` on level).
 
 ### Particles
 
-| tier | condition | debris |
-|---|---|---|
-| high | WebGPU backend | GPU pool, 256 per cell, ring-buffer emission |
-| medium | WebGPU on a slow frame budget, or WebGL2 | smaller pool / CPU pool |
-| low | adaptive downgrade | CPU pool, 24 per cell |
-| minimal | `prefers-reduced-motion` or user choice | no particles, short row flash |
+| tier    | condition                                | debris                                       |
+|---------|------------------------------------------|----------------------------------------------|
+| high    | WebGPU backend                           | GPU pool, 256 per cell, ring-buffer emission |
+| medium  | WebGPU on a slow frame budget, or WebGL2 | smaller pool / CPU pool                      |
+| low     | adaptive downgrade                       | CPU pool, 24 per cell                        |
+| minimal | `prefers-reduced-motion` or user choice  | no particles, short row flash                |
 
 The GPU path allocates its buffers once and emits with a ring cursor — spawning
 a particle system per line clear is how you get a frame hitch exactly when the
@@ -175,16 +175,16 @@ pnpm --filter @tetris/web test:e2e         # playwright smoke, both backends
 
 ## Milestone status
 
-| | | |
-|---|---|---|
-| M0 | engine + tests + 2D reference renderer | done |
-| M1 | Nuxt 4 + TresJS 5 + WebGPU renderer, backend detection, resize fit | done |
-| M2 | 3D board, active piece, ghost, DOM HUD | done |
-| M3 | DAS/ARR, hold, next queue, hitstop, squash, procedural audio, `feel.ts` + Tweakpane | done |
-| M4 | RenderPipeline, bloom, ACES, chromatic aberration, FXAA, vignette-free neon | done |
-| M5 | TSL compute particle pool + CPU fallback, quality tiers | done |
-| M6 | menus, settings, a11y toggles, pause, game over, local high scores | mostly done — key remapping UI still missing |
-| M7 | adaptive quality, replays, mobile swipes | done except a Nitro leaderboard and deploy |
+|    |                                                                                     |                                              |
+|----|-------------------------------------------------------------------------------------|----------------------------------------------|
+| M0 | engine + tests + 2D reference renderer                                              | done                                         |
+| M1 | Nuxt 4 + TresJS 5 + WebGPU renderer, backend detection, resize fit                  | done                                         |
+| M2 | 3D board, active piece, ghost, DOM HUD                                              | done                                         |
+| M3 | DAS/ARR, hold, next queue, hitstop, squash, procedural audio, `feel.ts` + Tweakpane | done                                         |
+| M4 | RenderPipeline, bloom, ACES, chromatic aberration, FXAA, vignette-free neon         | done                                         |
+| M5 | TSL compute particle pool + CPU fallback, quality tiers                             | done                                         |
+| M6 | menus, settings, a11y toggles, pause, game over, local high scores                  | mostly done — key remapping UI still missing |
+| M7 | adaptive quality, replays, mobile swipes                                            | done except a Nitro leaderboard and deploy   |
 
 ## Verified how
 

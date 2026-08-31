@@ -144,8 +144,27 @@ because an absent report is the only signal a reader has for "never ran".
 
 | Trigger | Mode |
 |---|---|
-| [`.github/workflows/evidence.yml`](../.github/workflows/evidence.yml) on push and pull request | warn-only |
+| [`.github/workflows/evidence.yml`](../.github/workflows/evidence.yml) on push and pull request | every check enforced; governance warn-only |
 | `.githooks/pre-push`, after `pnpm hooks:install` | warn-only, `--fast` |
+
+The workflow is not merely a place to run the commands. It settles a conflict of
+interest: every check here can be run by whoever wrote the change, which makes a
+passing local run a *self-report* - anyone who skipped the gathering step skips
+the verifying step just as easily. CI is the independent runner. Same commands,
+different party.
+
+Each check is a separately named step, so the run page reads as a list of claims
+that were checked rather than one opaque green tick. Two of those steps assert
+that the **broken** fixtures are still rejected: a checker that quietly stops
+finding things is worse than no checker, because nobody notices.
+
+Afterwards `pnpm ci:summary` renders the governance report into the job summary
+and comments it on the pull request. That is the consumer the delimited JSON block
+exists for - and when the block is missing it says **"no report"** in as many
+words, because a clean report and an absent one must never look the same.
+
+[`demo/ci-walkthrough.md`](../demo/ci-walkthrough.md) is the four-step live demo,
+including how to make it fail on purpose.
 
 Warn-only is deliberate. A gate switched on before its report is clean teaches
 people to route around it. Flipping to enforcing is one word - add `--enforce` to

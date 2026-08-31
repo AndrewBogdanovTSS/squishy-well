@@ -43,6 +43,7 @@ whether anything runs them:
 | `pnpm check:claims` | the grounding tags in a review |
 | `pnpm check:receipt` | "I read the code" |
 | `pnpm check:all` | "this is enforced" |
+| `pnpm ci:summary` | "the checks ran" |
 
 Constraints that shaped them:
 
