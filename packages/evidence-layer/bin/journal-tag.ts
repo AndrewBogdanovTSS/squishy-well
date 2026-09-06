@@ -1,0 +1,51 @@
+/**
+ * `journal:tag <id> real|false` or `journal:tag <id> --caught yes|no`
+ *
+ * Fully portable, same cwd convention as `journal-report.ts`: the journal
+ * belongs to whichever project is running this, resolved from `process.cwd()`
+ * or `--repo`, never from this file's own location inside the shared package.
+ *
+ * Tagging happens at the moment of fixing, by whoever fixed it - not as a
+ * separate ritual, and not reconstructed later. Reconstructing it later is
+ * expensive enough that nobody will do it, which is exactly why the field
+ * exists as a one-line command rather than a form.
+ *
+ * Exit codes: 0 tagged - 1 unknown id - 2 bad usage.
+ */
+import { join } from 'node:path'
+import { EXIT, parseArgs, tagEntry, usage } from '../src/index'
+
+const HELP = `
+journal:tag <entry-id> real|false          # a check's finding was real or false
+journal:tag <entry-id> --caught yes|no     # could an existing check have caught this miss
+journal:tag <entry-id> ... [--repo <path>] # default repo is the current directory
+`
+
+function main(): void {
+  const args = parseArgs(process.argv.slice(2))
+  if (args.help) usage(HELP)
+
+  const repo = typeof args.repo === 'string' ? args.repo : process.cwd()
+  const journalPath = join(repo, 'journal.jsonl')
+
+  const [id, verdict] = args._ as string[]
+  if (!id) usage(HELP)
+
+  const patch =
+    args.caught === 'yes' || args.caught === 'no'
+      ? { couldHaveCaught: args.caught as 'yes' | 'no' }
+      : verdict === 'real' || verdict === 'false'
+        ? { verified: verdict as 'real' | 'false' }
+        : null
+  if (!patch) usage(HELP)
+
+  const ok = tagEntry(journalPath, id, patch)
+  if (!ok) {
+    console.error('no journal entry with id ' + id)
+    process.exit(EXIT.failed)
+  }
+  console.log('tagged ' + id)
+  process.exit(EXIT.ok)
+}
+
+main()

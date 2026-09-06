@@ -21,7 +21,7 @@ and move on. Both are fine. Pretending is not.
 
 | Grade | Means | Must carry |
 |---|---|---|
-| VERIFIED | I ran it | an artifact block within 15 lines |
+| VERIFIED[id] | I ran it, and this is the exact run | an artifact carrying that id, anywhere in the review |
 | DOCUMENTED | someone specified it | a citation: URL, § section, issue id, or a file in this repo |
 | INFERRED | I reasoned it | two or more numbered steps |
 | UNVERIFIED | I believe it | nothing, and it says so |
@@ -29,15 +29,20 @@ and move on. Both are fine. Pretending is not.
 The artifact block:
 
 ````markdown
-```artifact
+```artifact:tests-a3f91c@0047f95
 $ pnpm test
 Tests  71 passed (71)
 exit: 0
 ```
 ````
 
-Exact command, verbatim output, exit code. Not a summary of the output - a
-summary is a new claim, made by you, about output the reader cannot see.
+Exact command, verbatim output, exit code, id and commit. Not a summary of the
+output - a summary is a new claim, made by you, about output the reader cannot
+see. `pnpm evidence` computes the id and writes the `**Claim**` /
+`**Grounding**: VERIFIED[id]` pair next to it already - the cheap move is to
+leave that line in place, not to type a bare `VERIFIED` and skip finding the
+id (which still works today, with a warning, but stops working on the date in
+`docs/decisions/0002-evidence-layer-v2.md`).
 
 ## Rewrites
 

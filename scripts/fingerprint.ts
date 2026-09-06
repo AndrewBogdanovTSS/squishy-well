@@ -15,6 +15,15 @@
  * The fingerprint is `boardHash:score:lines:level:pieces:phase`, so a mismatch
  * also tells you roughly what moved.
  *
+ * Deliberately never routed through the journal's flaky policy (see
+ * `evidence-layer`'s `applyFlakyPolicy`, used by `check-docs.ts`): a fingerprint
+ * mismatch with unchanged engine source is not noise to be smoothed over, it is
+ * a determinism bug in the engine itself - a more serious finding than an
+ * ordinary failure, not a lesser one. Determinism is a property this project
+ * declares about itself in its own README; treating its violation as flaky
+ * would be exactly the kind of leniency this layer's own cost rule forbids -
+ * see `docs/decisions/0002-evidence-layer-v2.md`.
+ *
  * Exit codes: 0 all fixtures match - 1 at least one moved - 2 bad usage.
  */
 import { readFileSync, readdirSync } from 'node:fs'
@@ -22,8 +31,8 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { playReplay } from '../packages/tetris-core/src/replay'
 import type { Replay } from '../packages/tetris-core/src/replay'
-import { EXIT, exitCodeFor, parseArgs, report, usage } from './lib/cli'
-import type { Finding } from './lib/cli'
+import { EXIT, exitCodeFor, parseArgs, report, usage } from 'evidence-layer'
+import type { Finding } from 'evidence-layer'
 
 const HELP = `
 pnpm fingerprint [--dir <fixtures dir>] [--strict]
@@ -70,7 +79,7 @@ export function checkFixtures(dir: string): Finding[] {
     return {
       level: 'error',
       claim,
-      detail: 'recorded ' + replay.fingerprint + '\n        replayed ' + actual,
+      detail: 'recorded ' + replay.fingerprint + '\n        replayed ' + actual + ' - engine determinism bug, not noise',
       file: join(dir, file),
     }
   })

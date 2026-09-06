@@ -1,3 +1,16 @@
+<template>
+  <TresCanvas
+    :renderer="createRenderer"
+    :dpr="[1, 2]"
+    window-size
+    shadows
+    clear-color="#05070d"
+    class="game-canvas"
+  >
+    <game-scene :accessible />
+  </TresCanvas>
+</template>
+
 <script setup lang="ts">
 import { TresCanvas } from '@tresjs/core'
 import type { TresRendererSetupContext } from '@tresjs/core'
@@ -27,19 +40,6 @@ function createRenderer(ctx: TresRendererSetupContext) {
   })
 }
 </script>
-
-<template>
-  <TresCanvas
-    :renderer="createRenderer"
-    :dpr="[1, 2]"
-    window-size
-    shadows
-    clear-color="#05070d"
-    class="game-canvas"
-  >
-    <GameScene :accessible="accessible" />
-  </TresCanvas>
-</template>
 
 <style scoped>
 .game-canvas { display: block; }

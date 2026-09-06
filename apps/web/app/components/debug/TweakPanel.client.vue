@@ -1,3 +1,7 @@
+<template>
+  <div ref="container" class="tweak" />
+</template>
+
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, shallowRef } from 'vue'
 import { liveFeel } from '~/config/feel'
@@ -50,10 +54,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => pane?.dispose())
 </script>
-
-<template>
-  <div ref="container" class="tweak" />
-</template>
 
 <style scoped>
 .tweak {

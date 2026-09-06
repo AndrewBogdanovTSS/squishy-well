@@ -6,20 +6,33 @@
 > Read the two side by side. The repaired version is longer, hedges more, and
 > sounds less confident - and it is the only one of the two that could be proved
 > wrong.
+>
+> v2: the VERIFIED claim below uses the **addressed** form,
+> `VERIFIED[engine-379669]`, rather than a bare `VERIFIED` sitting near an
+> artifact. Addressing exists because proximity alone has a real gap: a block
+> copied to the wrong place still clears a proximity check, since that check
+> only confirms *a* block is nearby, not that it is *the* block the claim is about.
+> The id is real and reproducible - re-run `pnpm fingerprint` at the commit
+> named in the block and you get the identical id back, because the id is a
+> hash of the command, the commit and the output.
 
 ## Findings
 
 **Claim**: the recorded games still replay to their stored fingerprints.
-**Grounding**: VERIFIED
+**Grounding**: VERIFIED[engine-379669]
 
-```artifact
+```artifact:engine-379669@0047f95
 $ pnpm fingerprint
+Engine fingerprints
+-------------------
 [ ok ] baseline.replay.json replays to its recorded fingerprint
         0a56c479:460:0:1:20:GAME_OVER
 [ ok ] bot-game.replay.json replays to its recorded fingerprint
         c87d36c8:229812:178:18:474:GAME_OVER
 [ ok ] tspin-double.replay.json replays to its recorded fingerprint
         b3a260d4:1200:2:1:1:FALLING
+
+3 checked - 0 failed, 0 flaky, 0 warnings, 0 unverifiable
 exit: 0
 ```
 

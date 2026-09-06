@@ -1,3 +1,87 @@
+<template>
+  <main ref="stage" class="play">
+    <client-only>
+      <game-canvas :accessible="settings.accessiblePalette" />
+      <template #fallback>
+        <div class="boot">initialising renderer…</div>
+      </template>
+    </client-only>
+
+    <game-hud />
+
+    <div class="topbar">
+      <nuxt-link to="/" class="link">← MENU</nuxt-link>
+      <span class="badge">{{ backendLabel }} · {{ session.quality.tier.value }}<template v-if="session.bot.value"> · BOT</template></span>
+      <button class="link" @click="showSettings = !showSettings">SETTINGS</button>
+    </div>
+
+    <transition name="fade">
+      <div v-if="session.paused.value && !session.gameOver.value" class="overlay">
+        <div class="panel card">
+          <h2>PAUSED</h2>
+          <button @click="session.togglePause(false)">RESUME</button>
+          <button @click="session.restart()">RESTART</button>
+          <nuxt-link to="/" class="btnlink">QUIT</nuxt-link>
+        </div>
+      </div>
+    </transition>
+
+    <transition name="fade">
+      <div v-if="session.gameOver.value" class="overlay">
+        <div class="panel card">
+          <h2>GAME OVER</h2>
+          <dl>
+            <dt>SCORE</dt><dd>{{ session.hud.score.toLocaleString('en-US') }}</dd>
+            <dt>LINES</dt><dd>{{ session.hud.lines }}</dd>
+            <dt>LEVEL</dt><dd>{{ session.hud.level }}</dd>
+            <dt>BEST</dt><dd>{{ settings.best.toLocaleString('en-US') }}</dd>
+          </dl>
+          <button @click="session.restart()">AGAIN</button>
+          <nuxt-link to="/" class="btnlink">MENU</nuxt-link>
+        </div>
+      </div>
+    </transition>
+
+    <transition name="fade">
+      <aside v-if="showSettings" class="panel settings">
+        <h2>SETTINGS</h2>
+        <label>
+          <input v-model="settings.accessiblePalette" type="checkbox" >
+          High-contrast palette
+        </label>
+        <label>
+          <input v-model="settings.forceReducedMotion" type="checkbox" >
+          Reduce motion &amp; flashes
+        </label>
+        <label>
+          <input v-model="settings.muted" type="checkbox" >
+          Mute
+        </label>
+        <label class="range">
+          Volume
+          <input v-model.number="settings.volume" type="range" min="0" max="1" step="0.05" >
+        </label>
+        <label class="range">
+          Quality
+          <select v-model="settings.quality">
+            <option value="auto">auto</option>
+            <option value="high">high</option>
+            <option value="medium">medium</option>
+            <option value="low">low</option>
+            <option value="minimal">minimal</option>
+          </select>
+        </label>
+        <p class="hint">
+          ← → move · ↓ soft drop · space hard drop · Z/X rotate · A flip · C hold · P pause · R restart
+        </p>
+        <button @click="showSettings = false">CLOSE</button>
+      </aside>
+    </transition>
+
+    <debug-tweak-panel v-if="isDev" />
+  </main>
+</template>
+
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { createGameSession, GameSessionKey } from '~/composables/useGameSession'
@@ -92,90 +176,6 @@ onBeforeUnmount(() => {
   settings.persist()
 })
 </script>
-
-<template>
-  <main ref="stage" class="play">
-    <ClientOnly>
-      <GameCanvas :accessible="settings.accessiblePalette" />
-      <template #fallback>
-        <div class="boot">initialising renderer…</div>
-      </template>
-    </ClientOnly>
-
-    <GameHud />
-
-    <div class="topbar">
-      <NuxtLink to="/" class="link">← MENU</NuxtLink>
-      <span class="badge">{{ backendLabel }} · {{ session.quality.tier.value }}<template v-if="session.bot.value"> · BOT</template></span>
-      <button class="link" @click="showSettings = !showSettings">SETTINGS</button>
-    </div>
-
-    <transition name="fade">
-      <div v-if="session.paused.value && !session.gameOver.value" class="overlay">
-        <div class="panel card">
-          <h2>PAUSED</h2>
-          <button @click="session.togglePause(false)">RESUME</button>
-          <button @click="session.restart()">RESTART</button>
-          <NuxtLink to="/" class="btnlink">QUIT</NuxtLink>
-        </div>
-      </div>
-    </transition>
-
-    <transition name="fade">
-      <div v-if="session.gameOver.value" class="overlay">
-        <div class="panel card">
-          <h2>GAME OVER</h2>
-          <dl>
-            <dt>SCORE</dt><dd>{{ session.hud.score.toLocaleString('en-US') }}</dd>
-            <dt>LINES</dt><dd>{{ session.hud.lines }}</dd>
-            <dt>LEVEL</dt><dd>{{ session.hud.level }}</dd>
-            <dt>BEST</dt><dd>{{ settings.best.toLocaleString('en-US') }}</dd>
-          </dl>
-          <button @click="session.restart()">AGAIN</button>
-          <NuxtLink to="/" class="btnlink">MENU</NuxtLink>
-        </div>
-      </div>
-    </transition>
-
-    <transition name="fade">
-      <aside v-if="showSettings" class="panel settings">
-        <h2>SETTINGS</h2>
-        <label>
-          <input v-model="settings.accessiblePalette" type="checkbox" >
-          High-contrast palette
-        </label>
-        <label>
-          <input v-model="settings.forceReducedMotion" type="checkbox" >
-          Reduce motion &amp; flashes
-        </label>
-        <label>
-          <input v-model="settings.muted" type="checkbox" >
-          Mute
-        </label>
-        <label class="range">
-          Volume
-          <input v-model.number="settings.volume" type="range" min="0" max="1" step="0.05" >
-        </label>
-        <label class="range">
-          Quality
-          <select v-model="settings.quality">
-            <option value="auto">auto</option>
-            <option value="high">high</option>
-            <option value="medium">medium</option>
-            <option value="low">low</option>
-            <option value="minimal">minimal</option>
-          </select>
-        </label>
-        <p class="hint">
-          ← → move · ↓ soft drop · space hard drop · Z/X rotate · A flip · C hold · P pause · R restart
-        </p>
-        <button @click="showSettings = false">CLOSE</button>
-      </aside>
-    </transition>
-
-    <DebugTweakPanel v-if="isDev" />
-  </main>
-</template>
 
 <style scoped>
 .play { position: relative; width: 100vw; height: 100dvh; overflow: hidden; }

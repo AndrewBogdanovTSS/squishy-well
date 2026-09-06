@@ -1,5 +1,5 @@
 /**
- * `pnpm check:claims <review.md>` - is every claim in this review backed?
+ * `check:claims` core - is every claim in a review backed?
  *
  * The claim it makes falsifiable: the grounding tags themselves.
  *
@@ -8,40 +8,49 @@
  * one token to write and nothing checks it. Anything a writer can satisfy for
  * free carries no information.
  *
- * So this script checks the tags. VERIFIED must sit next to a real artifact
- * block. DOCUMENTED must cite something. INFERRED must show its reasoning.
- * Language that cannot be wrong - "more robust", "behaves identically",
- * "it works" - has to be marked UNVERIFIED or backed by a stated effect.
+ * VERIFIED comes in two forms:
+ *
+ *   - `VERIFIED[tests-a3f91c]` - addressed. The tag names the exact artifact it
+ *     rests on, and this resolves that id anywhere in the document, checks it
+ *     was collected at the commit the review claims to be about, and refuses to
+ *     let two unrelated claims share one artifact silently.
+ *   - bare `VERIFIED` - legacy. Falls back to the original proximity check (an
+ *     artifact block within 15 lines) and adds a warning recommending the
+ *     addressed form. Proximity alone has a real gap: a block copied to the
+ *     wrong place still passes it, because it confirms *a* block is nearby, not
+ *     that it is *the* block the claim is about. See
+ *     `docs/decisions/0002-evidence-layer-v2.md` for the deprecation date.
+ *
+ * DOCUMENTED must cite something. INFERRED must show its reasoning. Language
+ * that cannot be wrong - "more robust", "behaves identically", "it works" - has
+ * to be marked UNVERIFIED or backed by a stated effect.
  *
  * An honest UNVERIFIED is worth more than a decorative VERIFIED: it tells the
  * reader exactly where the review is thin.
  *
- * Exit codes: 0 clean - 1 at least one error - 2 bad usage.
+ * What this does not do: it does not verify that an artifact's output actually
+ * supports the meaning of the claim next to it - that requires reading the
+ * output for sense, which is a probabilistic judgement, and putting one inside
+ * a deterministic checker reintroduces exactly the circular validation this
+ * layer exists to avoid. It guarantees only that the artifact exists, was
+ * collected here, and was pointed at on purpose rather than left nearby.
  */
-import { existsSync, readFileSync } from 'node:fs'
-import { EXIT, exitCodeFor, parseArgs, report, usage } from './lib/cli'
-import type { Finding } from './lib/cli'
-import { fencedLineNumbers, findArtifactBlocks } from './lib/artifact'
+import { fencedLineNumbers, findArtifactBlocks } from './artifact'
+import type { Finding } from './cli'
 
-const HELP = `
-pnpm check:claims <review.md> [--strict]
-
-Lints a review for grounding tags and their required backing.
-
-  --strict  treat warnings as failures
-
-exit 0 = every claim is backed, 1 = at least one is not, 2 = bad usage
-`
-
-/** How far below a VERIFIED tag its artifact block is allowed to sit. */
+/** How far below a legacy (unaddressed) VERIFIED tag its artifact block is allowed to sit. */
 export const ARTIFACT_WINDOW = 15
+
+/** A single artifact id is allowed to back this many claims before it is a warning, not a pass. */
+export const SHOTGUN_THRESHOLD = 2
 
 export const GRADES = ['VERIFIED', 'DOCUMENTED', 'INFERRED', 'UNVERIFIED'] as const
 export type Grade = (typeof GRADES)[number]
 
 const CLAIM_RE = /^\s*\*\*Claim\*\*:/
-// Built from GRADES so the list of grades exists in exactly one place.
-const GRADE_RE = new RegExp('\\b(' + GRADES.join('|') + ')\\b')
+// Built from GRADES so the list of grades exists in exactly one place, with an
+// optional `[id]` suffix for the addressed VERIFIED form.
+const GRADE_RE = new RegExp('\\b(' + GRADES.join('|') + ')(?:\\[([a-z]+-[0-9a-f]{6})\\])?')
 // A citation is anything a reader can go and open: a URL, a spec section, an
 // issue id, or a file in this repository. The last form matters here - a project
 // without an issue tracker still has documents, and refusing to accept them
@@ -75,6 +84,8 @@ interface Claim {
   line: number
   text: string
   grade?: Grade
+  /** Present only for the addressed `VERIFIED[id]` form. */
+  gradeId?: string
   /** 0-based line the grade was found on. */
   gradeLine?: number
 }
@@ -90,6 +101,7 @@ export function findClaims(lines: string[], fenced: Set<number>): Claim[] {
       const found = GRADE_RE.exec(lines[j]!)
       if (found) {
         claim.grade = found[1] as Grade
+        claim.gradeId = found[2]
         claim.gradeLine = j
         break
       }
@@ -99,7 +111,12 @@ export function findClaims(lines: string[], fenced: Set<number>): Claim[] {
   return claims
 }
 
-export function lintClaims(markdown: string, file: string): Finding[] {
+export interface LintOptions {
+  /** The commit the review claims to be about, when known - enables the id/commit mismatch check. */
+  expectedHeadSha?: string
+}
+
+export function lintClaims(markdown: string, file: string, opts: LintOptions = {}): Finding[] {
   const lines = markdown.split(/\r?\n/)
   const fenced = fencedLineNumbers(lines)
   const claims = findClaims(lines, fenced)
@@ -115,9 +132,11 @@ export function lintClaims(markdown: string, file: string): Finding[] {
     })
   }
 
-  // An artifact may back at most one claim. Two VERIFIED tags sharing a single
-  // command output is the cheapest way to fake coverage.
-  const consumed = new Set<number>()
+  // Legacy proximity mode may still consume an artifact positionally, so two
+  // unaddressed VERIFIED tags cannot silently share one block either.
+  const consumedByPosition = new Set<number>()
+  // Addressed mode: how many claims point at each id, for the shotgun check.
+  const idUsage = new Map<string, { count: number; lastLine: number }>()
 
   claims.forEach((claim, index) => {
     const where = { file, line: claim.line + 1 }
@@ -135,9 +154,48 @@ export function lintClaims(markdown: string, file: string): Finding[] {
 
     const gradeLine = claim.gradeLine!
 
+    if (claim.grade === 'VERIFIED' && claim.gradeId) {
+      const artifact = artifacts.find((a) => a.id === claim.gradeId)
+      if (!artifact) {
+        findings.push({
+          level: 'error',
+          claim: claim.text,
+          detail: 'VERIFIED[' + claim.gradeId + '] references an artifact that does not exist in this document',
+          ...where,
+        })
+        return
+      }
+      if (opts.expectedHeadSha && artifact.commit && !opts.expectedHeadSha.startsWith(artifact.commit)) {
+        findings.push({
+          level: 'error',
+          claim: claim.text,
+          detail:
+            'VERIFIED[' +
+            claim.gradeId +
+            '] was collected at ' +
+            artifact.commit +
+            ', but this review is about ' +
+            opts.expectedHeadSha.slice(0, 7),
+          ...where,
+        })
+        return
+      }
+      const usage = idUsage.get(claim.gradeId) ?? { count: 0, lastLine: claim.line }
+      usage.count += 1
+      usage.lastLine = claim.line
+      idUsage.set(claim.gradeId, usage)
+      findings.push({
+        level: 'pass',
+        claim: claim.text,
+        detail: 'VERIFIED by `' + artifact.command + '` (exit ' + artifact.exitCode + '), addressed as ' + claim.gradeId,
+        ...where,
+      })
+      return
+    }
+
     if (claim.grade === 'VERIFIED') {
       const idx = artifacts.findIndex(
-        (a, i) => !consumed.has(i) && a.start > gradeLine && a.start - gradeLine <= ARTIFACT_WINDOW,
+        (a, i) => !consumedByPosition.has(i) && a.start > gradeLine && a.start - gradeLine <= ARTIFACT_WINDOW,
       )
       if (idx === -1) {
         findings.push({
@@ -148,11 +206,19 @@ export function lintClaims(markdown: string, file: string): Finding[] {
         })
         return
       }
-      consumed.add(idx)
+      consumedByPosition.add(idx)
       findings.push({
         level: 'pass',
         claim: claim.text,
         detail: 'VERIFIED by `' + artifacts[idx]!.command + '` (exit ' + artifacts[idx]!.exitCode + ')',
+        ...where,
+      })
+      findings.push({
+        level: 'warning',
+        claim: claim.text,
+        detail:
+          'bare VERIFIED only confirms a block is nearby, not that it is the block this claim is about - ' +
+          'use VERIFIED[id] instead (see docs/decisions/0002-evidence-layer-v2.md for the cutover date)',
         ...where,
       })
       return
@@ -194,6 +260,22 @@ export function lintClaims(markdown: string, file: string): Finding[] {
     })
   })
 
+  // Shotgun: one artifact backing suspiciously many claims is the addressed
+  // form's equivalent of the wrong-block-copied-in problem - a warning by
+  // default, since a small handful of closely related claims sharing one
+  // artifact is sometimes legitimate.
+  for (const [id, usage] of idUsage) {
+    if (usage.count > SHOTGUN_THRESHOLD) {
+      findings.push({
+        level: 'warning',
+        claim: 'artifact ' + id + ' backs ' + usage.count + ' claims',
+        detail: 'each artifact should back at most ' + SHOTGUN_THRESHOLD + ' - consider gathering separate evidence',
+        file,
+        line: usage.lastLine + 1,
+      })
+    }
+  }
+
   findings.push(...lintProse(lines, fenced, file))
   return findings
 }
@@ -204,6 +286,12 @@ export function lintClaims(markdown: string, file: string): Finding[] {
  * Everything inside a fenced block is skipped. A review that quotes a bad
  * example, or pastes a diff containing the word "works", is not asserting it -
  * and a checker that cries wolf gets switched off, after which you have nothing.
+ *
+ * Deliberately does not flag untagged, ordinary taste ("this will be hard to
+ * maintain") - see `docs/evidence-layer.md` § What this does not do. The banned
+ * patterns below are banned because nothing could contradict them, not because
+ * an opinion was expressed; see `demo/reviews/boundary-limits.md` for both
+ * halves of that boundary, executable rather than left as a paragraph of prose.
  */
 export function lintProse(lines: string[], fenced: Set<number>, file: string): Finding[] {
   const findings: Finding[] = []
@@ -254,21 +342,3 @@ export function lintProse(lines: string[], fenced: Set<number>, file: string): F
   }
   return findings
 }
-
-function main(): void {
-  const args = parseArgs(process.argv.slice(2))
-  if (args.help) usage(HELP)
-
-  const path = (args._ as string[])[0] ?? (typeof args.path === 'string' ? args.path : undefined)
-  if (!path) usage(HELP)
-  if (!existsSync(path)) {
-    console.error('no such review file: ' + path)
-    process.exit(EXIT.usage)
-  }
-
-  const findings = lintClaims(readFileSync(path, 'utf8'), path)
-  report('Claims in ' + path, findings)
-  process.exit(exitCodeFor(findings, args.strict === true))
-}
-
-if (process.argv[1]?.includes('check-claims')) main()

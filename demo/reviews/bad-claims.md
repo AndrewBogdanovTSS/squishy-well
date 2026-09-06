@@ -7,6 +7,11 @@
 > Nothing here is wrong about the game. It is wrong about *evidence*: every claim
 > below is one a reader has no way to check, written in the register of someone
 > who has checked.
+>
+> v2 note: the ID-addressing gap this bare `VERIFIED` predates -
+> `demo/reviews/mismatched-artifact.md`, `phantom-artifact.md` and
+> `shotgun-artifact.md` cover the three new failure modes addressing was built
+> to catch. This file is the older, simpler failure: no backing at all.
 
 ## Findings
 

@@ -1,29 +1,3 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-import { cellsOf, type PieceType } from '@tetris/core'
-import { PALETTE } from '~/config/palette'
-
-const props = withDefaults(defineProps<{ piece: PieceType | null; size?: number; dim?: boolean }>(), {
-  size: 18,
-  dim: false,
-})
-
-/** Normalised 0..3 cell coordinates so every piece is centred in the box. */
-const layout = computed(() => {
-  if (!props.piece) return { cells: [] as Array<{ x: number; y: number }>, w: 4, h: 2 }
-  const cells = cellsOf(props.piece, 0).map(([x, y]) => ({ x, y }))
-  const minX = Math.min(...cells.map((c) => c.x))
-  const maxX = Math.max(...cells.map((c) => c.x))
-  const minY = Math.min(...cells.map((c) => c.y))
-  const maxY = Math.max(...cells.map((c) => c.y))
-  return {
-    cells: cells.map((c) => ({ x: c.x - minX, y: maxY - c.y })),
-    w: maxX - minX + 1,
-    h: maxY - minY + 1,
-  }
-})
-</script>
-
 <template>
   <div
     class="preview"
@@ -47,6 +21,29 @@ const layout = computed(() => {
     />
   </div>
 </template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { cellsOf, type PieceType } from '@tetris/core'
+import { PALETTE } from '~/config/palette'
+
+const { piece, size = 18, dim = false } = defineProps<{ piece: PieceType | null; size?: number; dim?: boolean }>()
+
+/** Normalised 0..3 cell coordinates so every piece is centred in the box. */
+const layout = computed(() => {
+  if (!piece) return { cells: [] as Array<{ x: number; y: number }>, w: 4, h: 2 }
+  const cells = cellsOf(piece, 0).map(([x, y]) => ({ x, y }))
+  const minX = Math.min(...cells.map((c) => c.x))
+  const maxX = Math.max(...cells.map((c) => c.x))
+  const minY = Math.min(...cells.map((c) => c.y))
+  const maxY = Math.max(...cells.map((c) => c.y))
+  return {
+    cells: cells.map((c) => ({ x: c.x - minX, y: maxY - c.y })),
+    w: maxX - minX + 1,
+    h: maxY - minY + 1,
+  }
+})
+</script>
 
 <style scoped>
 .preview { position: relative; }

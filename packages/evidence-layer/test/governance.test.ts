@@ -2,11 +2,11 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { checkReachability, readInvariants, reachableCommands } from '../governance'
+import { checkReachability, readInvariants, reachableCommands } from '../src/core/governance'
 
 let repo: string
 
-/** A throwaway repository shaped like this one, with only what the check reads. */
+/** A throwaway repository shaped like a consumer of this package, with only what the check reads. */
 function makeRepo(opts: {
   scripts?: Record<string, string>
   hook?: string
@@ -60,6 +60,11 @@ describe('readInvariants', () => {
     makeRepo({ invariants: ['The engine is deterministic.'] })
     expect(readInvariants(join(repo, 'docs', 'decisions'))).toHaveLength(0)
   })
+
+  it('flags an invariant that self-discloses a runtime-composed trigger', () => {
+    makeRepo({ invariants: ['Something is checked; enforced by `pnpm check:x` (runtime-composed trigger).'] })
+    expect(readInvariants(join(repo, 'docs', 'decisions'))[0]!.runtimeComposed).toBe(true)
+  })
 })
 
 describe('reachableCommands', () => {
@@ -74,9 +79,6 @@ describe('reachableCommands', () => {
   })
 
   it('follows a script file to the commands it runs in turn', () => {
-    // `check:all` is `tsx scripts/governance.ts`, and that file runs
-    // `pnpm check:docs`. Without following the file, check:docs looks orphaned
-    // while something is in fact running it every build.
     makeRepo({
       scripts: { 'check:all': 'tsx scripts/gov.ts', 'check:docs': 'tsx scripts/docs.ts' },
       scriptFiles: { 'scripts/gov.ts': 'run("pnpm check:docs")' },
@@ -88,6 +90,21 @@ describe('reachableCommands', () => {
   it('reaches nothing when no trigger exists', () => {
     makeRepo({ scripts: { 'check:docs': 'tsx scripts/docs.ts' } })
     expect(reachableCommands(repo).size).toBe(0)
+  })
+
+  it('recognises npm\'s special-cased shorthand (`npm test`, not only `npm run test`)', () => {
+    // npm special-cases test/start/stop/restart to run without the word
+    // "run". A project using the shorthand is not a rare case - it is most
+    // plain npm projects, which is exactly who "zero-config" has to work for.
+    makeRepo({ scripts: { test: 'vitest run' }, workflow: 'jobs:\n  a:\n    steps:\n      - run: npm test\n' })
+    expect(reachableCommands(repo).has('test')).toBe(true)
+  })
+
+  it('does not apply the npm shorthand to an ordinary script name', () => {
+    // "npm docs" is not valid npm syntax for a script named "docs" - only the
+    // four special-cased names get the bare form.
+    makeRepo({ scripts: { docs: 'typedoc' }, workflow: 'jobs:\n  a:\n    steps:\n      - run: npm docs\n' })
+    expect(reachableCommands(repo).has('docs')).toBe(false)
   })
 })
 
@@ -108,8 +125,6 @@ describe('checkReachability', () => {
   })
 
   it('warns, rather than fails, when enforcement is a person', () => {
-    // Plenty of real rules are enforced by people. Failing those would push
-    // authors into naming a fake command to get a green check.
     makeRepo({ invariants: ['Accessibility is considered; enforced by a reviewer.'] })
     expect(checkReachability(repo)[0]!.level).toBe('warning')
   })
@@ -121,5 +136,15 @@ describe('checkReachability', () => {
       invariants: ['README claims hold; enforced by `pnpm check:docs`.'],
     })
     expect(checkReachability(repo)[0]!.level).toBe('pass')
+  })
+
+  it('downgrades an unreached, self-disclosed runtime-composed trigger to unverifiable, not a silent pass', () => {
+    makeRepo({
+      scripts: { 'check:docs': 'tsx scripts/docs.ts' },
+      invariants: ['README claims hold; enforced by `pnpm check:docs` (runtime-composed trigger).'],
+    })
+    const [finding] = checkReachability(repo)
+    expect(finding?.level).toBe('unverifiable')
+    expect(finding?.level).not.toBe('pass')
   })
 })

@@ -1,3 +1,7 @@
+<template>
+  <primitive :object="mesh" />
+</template>
+
 <script setup lang="ts">
 import { inject, onBeforeUnmount, watch } from 'vue'
 import * as THREE from 'three/webgpu'
@@ -10,7 +14,7 @@ import { liveFeel } from '~/config/feel'
 import { asVec3 } from '~/lib/tsl'
 import { blockGeometry, clamp01, easeOutBack, easeOutCubic, worldX, worldY } from '~/lib/three'
 
-const props = withDefaults(defineProps<{ accessible?: boolean }>(), { accessible: false })
+const { accessible = false } = defineProps<{ accessible?: boolean }>()
 const session = inject(GameSessionKey)!
 
 const MAX = COLS * VISIBLE_ROWS
@@ -56,7 +60,7 @@ let squashStart = -1
 let squashAmount = 0
 
 function palette() {
-  return props.accessible ? PALETTE_ACCESSIBLE : PALETTE
+  return accessible ? PALETTE_ACCESSIBLE : PALETTE
 }
 
 function syncBoard(): void {
@@ -86,7 +90,7 @@ function syncBoard(): void {
 }
 
 watch(() => session.boardVersion.value, syncBoard, { immediate: true })
-watch(() => props.accessible, syncBoard)
+watch(() => accessible, syncBoard)
 
 const offLock = session.bus.on('LOCK', (e) => {
   if (session.quality.reducedMotion.value) return
@@ -177,7 +181,3 @@ onBeforeUnmount(() => {
   mesh.dispose()
 })
 </script>
-
-<template>
-  <primitive :object="mesh" />
-</template>

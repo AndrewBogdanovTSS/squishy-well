@@ -1,3 +1,14 @@
+<template>
+  <primitive :object="rig" />
+
+  <well />
+  <board-blocks :accessible />
+  <ghost-piece />
+  <active-piece :accessible />
+  <shatter-v-f-x />
+  <post-f-x />
+</template>
+
 <script setup lang="ts">
 import { inject, onBeforeUnmount, onMounted, watch } from 'vue'
 import * as THREE from 'three/webgpu'
@@ -12,7 +23,7 @@ import GhostPiece from './GhostPiece.vue'
 import ShatterVFX from './ShatterVFX.vue'
 import PostFX from './PostFX.vue'
 
-const props = withDefaults(defineProps<{ accessible?: boolean }>(), { accessible: false })
+const { accessible = false } = defineProps<{ accessible?: boolean }>()
 const session = inject(GameSessionKey)!
 const { renderer, camera, sizes, scene } = useTresContext()
 
@@ -147,14 +158,3 @@ onBeforeUnmount(() => {
   void scene
 })
 </script>
-
-<template>
-  <primitive :object="rig" />
-
-  <Well />
-  <BoardBlocks :accessible="props.accessible" />
-  <GhostPiece />
-  <ActivePiece :accessible="props.accessible" />
-  <ShatterVFX />
-  <PostFX />
-</template>

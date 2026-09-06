@@ -1,3 +1,7 @@
+<template>
+  <TresGroup />
+</template>
+
 <script setup lang="ts">
 import { inject, onBeforeUnmount, shallowRef, watch } from 'vue'
 import * as THREE from 'three/webgpu'
@@ -71,7 +75,3 @@ render((notifySuccess) => {
 
 onBeforeUnmount(dispose)
 </script>
-
-<template>
-  <TresGroup />
-</template>

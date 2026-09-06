@@ -6,6 +6,12 @@
 > The receipt below is the first block of the review, above any verdict, because
 > a reader has to see where the review was written from before they see what it
 > concluded.
+>
+> v2: this review cites two files (`three.ts` and `eslint.config.js`), so it now
+> carries **two** Sample integrity lines, one per cited file - see
+> `demo/reviews/bad-receipt.md`, which already demonstrated the gap this closes
+> by accident, before this rule existed to name it: quoting one file proves
+> *a* file was opened, not the ones the review is actually about.
 
 ## Access Receipt
 
@@ -18,6 +24,7 @@
 **Files in diff**: 9
 **Files opened during review**: 9
 **Sample integrity**: `apps/web/app/lib/three.ts` -> `import { COLS, VISIBLE_ROWS } from '@tetris/core'`
+**Sample integrity**: `eslint.config.js` -> `import tseslint from 'typescript-eslint'`
 **Tools used**: git, ripgrep, the local test suite
 
 Every field above is a literal value. Nothing here is a summary, an impression,

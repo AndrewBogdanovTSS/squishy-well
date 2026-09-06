@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { extractReport, renderSummary } from '../ci-summary'
-import type { Report } from '../ci-summary'
+import { extractReport, renderSummary } from '../src/core/ci-summary'
+import type { Report } from '../src/core/ci-summary'
 
 const wrap = (json: unknown, noise = 'some console output\n') =>
   noise + '---GOVERNANCE-JSON-BEGIN---\n' + JSON.stringify(json) + '\n---GOVERNANCE-JSON-END---\n' + noise
@@ -52,30 +52,31 @@ describe('renderSummary', () => {
   })
 
   it('escapes pipes so one detail cannot break the table', () => {
-    const md = renderSummary(
-      { ...clean, findings: [{ level: 'warning', claim: 'a | b', detail: 'c | d' }] },
-      'warn',
-    )
+    const md = renderSummary({ ...clean, findings: [{ level: 'warning', claim: 'a | b', detail: 'c | d' }] }, 'warn')
     const row = md.split('\n').find((l) => l.includes('a \\| b'))
     expect(row).toBeDefined()
     expect(row).toContain('c \\| d')
   })
 
   it('folds a multi-line detail onto one row', () => {
-    const md = renderSummary(
-      { ...clean, findings: [{ level: 'error', claim: 'x', detail: 'first\n        second' }] },
-      'warn',
-    )
+    const md = renderSummary({ ...clean, findings: [{ level: 'error', claim: 'x', detail: 'first\n        second' }] }, 'warn')
     expect(md).not.toMatch(/first\n\s+second/)
     expect(md).toContain('first &middot; second')
   })
 
+  it('renders a flaky finding with its own icon and does not count it as clean', () => {
+    const md = renderSummary({ ...clean, findings: [{ level: 'flaky', claim: 'x', detail: 'y' }] }, 'warn')
+    expect(md).not.toContain('Every invariant')
+    expect(md).toContain('🔁')
+  })
+
   it('says "no report" when there is no report - the branch that matters most', () => {
-    // A missing report and a clean report must never look the same. This is the
-    // only signal anyone has for "the checks never ran".
     const md = renderSummary(null, 'warn')
     expect(md).toContain('no report')
     expect(md).toContain('did not run')
-    expect(md).not.toContain('clean')
+    // Not "does this text ever contain the word clean" - the prose legitimately
+    // explains that this differs from a clean run. The thing that must never
+    // happen is rendering the actual clean-run verdict heading.
+    expect(md).not.toContain('## ✅ Governance: clean')
   })
 })

@@ -1,14 +1,21 @@
 /**
- * Tiny argument parser and reporter shared by every script in this folder.
+ * Tiny argument parser and reporter shared by every check in this package.
  *
  * The claim it makes falsifiable: none - this is plumbing. It exists so that
- * every script agrees on what `--help` prints and what an exit code means,
+ * every check agrees on what `--help` prints and what an exit code means,
  * because a checker whose exit codes are inconsistent teaches the wrong lesson
  * on its very first run.
  */
 
-/** Exit codes are a contract. `2` is bad usage, and bad usage is never a pass. */
-export const EXIT = { ok: 0, failed: 1, usage: 2 } as const
+/**
+ * Exit codes are a contract.
+ *
+ * `usage` (2) is bad usage, and bad usage is never a pass. `flaky` (3) is its
+ * own code, distinct from `failed` - a caller that only checks "was it zero"
+ * still sees a non-zero exit, but a caller that wants to treat instability
+ * differently from a real failure can tell the two apart without parsing text.
+ */
+export const EXIT = { ok: 0, failed: 1, usage: 2, flaky: 3 } as const
 
 export interface Args {
   /** Positional arguments, in order. */
@@ -37,7 +44,19 @@ export function parseArgs(argv: string[]): Args {
   return args
 }
 
-export type Level = 'pass' | 'warning' | 'error' | 'unverifiable'
+/**
+ * Five outcomes, not the three or four an ordinary linter uses.
+ *
+ * `unverifiable` is deliberately not an error and deliberately not a pass: a
+ * checker that reports success when it could not run is worse than no checker
+ * at all, because it manufactures confidence out of nothing.
+ *
+ * `flaky` is deliberately not the same as `error`: a test that failed for
+ * reasons unrelated to the change under review is real information, but it is
+ * not the same claim as "the change broke something," and collapsing the two
+ * teaches people to bypass the check the first time noise looks like signal.
+ */
+export type Level = 'pass' | 'warning' | 'error' | 'unverifiable' | 'flaky'
 
 export interface Finding {
   level: Level
@@ -55,6 +74,7 @@ const ICON: Record<Level, string> = {
   warning: 'warn',
   error: 'FAIL',
   unverifiable: ' ?? ',
+  flaky: 'flky',
 }
 
 export function report(title: string, findings: Finding[]): void {
@@ -78,6 +98,8 @@ export function summarise(findings: Finding[]): string {
     ' checked - ' +
     n('error') +
     ' failed, ' +
+    n('flaky') +
+    ' flaky, ' +
     n('warning') +
     ' warnings, ' +
     n('unverifiable') +
@@ -86,14 +108,13 @@ export function summarise(findings: Finding[]): string {
 }
 
 /**
- * `unverifiable` is deliberately not an error and deliberately not a pass.
- *
- * A checker that reports success when it could not run is worse than no checker
- * at all, because it manufactures confidence out of nothing. Three outcomes,
- * never two.
+ * `unverifiable` and `flaky` are deliberately not the same thing as a pass, and
+ * deliberately not the same thing as an error either. Three or more outcomes,
+ * never collapsed to two.
  */
 export function exitCodeFor(findings: Finding[], strict = false): number {
   if (findings.some((f) => f.level === 'error')) return EXIT.failed
+  if (findings.some((f) => f.level === 'flaky')) return EXIT.flaky
   if (strict && findings.some((f) => f.level === 'warning' || f.level === 'unverifiable')) {
     return EXIT.failed
   }

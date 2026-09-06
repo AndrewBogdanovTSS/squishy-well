@@ -1,3 +1,7 @@
+<template>
+  <primitive :object="mesh" />
+</template>
+
 <script setup lang="ts">
 import { inject, onBeforeUnmount } from 'vue'
 import * as THREE from 'three/webgpu'
@@ -10,7 +14,7 @@ import { liveFeel } from '~/config/feel'
 import { asVec3 } from '~/lib/tsl'
 import { blockGeometry, worldX, worldY } from '~/lib/three'
 
-const props = withDefaults(defineProps<{ accessible?: boolean }>(), { accessible: false })
+const { accessible = false } = defineProps<{ accessible?: boolean }>()
 const session = inject(GameSessionKey)!
 
 /**
@@ -77,7 +81,7 @@ onBeforeRender(({ delta }) => {
   nudgeX *= Math.exp(-delta * 14)
   nudgeY *= Math.exp(-delta * 14)
 
-  const colors = props.accessible ? PALETTE_ACCESSIBLE : PALETTE
+  const colors = accessible ? PALETTE_ACCESSIBLE : PALETTE
   _c.set(colors[p.type])
   const cells = cellsOf(p.type, p.rot)
   for (let i = 0; i < 4; i++) {
@@ -99,7 +103,3 @@ onBeforeUnmount(() => {
   mesh.dispose()
 })
 </script>
-
-<template>
-  <primitive :object="mesh" />
-</template>

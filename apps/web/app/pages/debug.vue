@@ -1,3 +1,53 @@
+<template>
+  <main class="debug">
+    <header>
+      <h1>DEBUG · 2D REFERENCE</h1>
+      <nav>
+        <nuxt-link to="/play">3D</nuxt-link>
+        <nuxt-link to="/">MENU</nuxt-link>
+      </nav>
+    </header>
+
+    <div class="stage">
+      <board2-d :cell="26" />
+
+      <aside class="tools panel">
+        <div class="row">
+          <button @click="session.togglePause()">{{ session.paused.value ? 'RESUME' : 'PAUSE' }}</button>
+          <button @click="session.restart()">RESTART</button>
+        </div>
+        <div class="row">
+          <button :disabled="!session.paused.value" @click="session.step(1)">STEP 1</button>
+          <button :disabled="!session.paused.value" @click="session.step(6)">STEP 6</button>
+        </div>
+        <div class="row">
+          <button @click="session.bot.value = !session.bot.value">
+            BOT {{ session.bot.value ? 'ON' : 'OFF' }}
+          </button>
+          <button @click="downloadReplay()">SAVE REPLAY</button>
+          <button @click="showState = !showState">{{ showState ? 'HIDE' : 'SHOW' }} STATE</button>
+        </div>
+
+        <dl>
+          <dt>seed</dt><dd>{{ session.currentSeed.value }}</dd>
+          <dt>phase</dt><dd>{{ session.hud.phase }}</dd>
+          <dt>hash</dt><dd>{{ boardHash }}</dd>
+          <dt>frame</dt><dd>{{ session.quality.frameMs.value.toFixed(1) }} ms</dd>
+          <dt>tier</dt><dd>{{ session.quality.tier.value }}</dd>
+        </dl>
+
+        <pre v-if="showState" class="dump">{{ rows.join('\n') }}</pre>
+      </aside>
+
+      <div class="hud-host"><game-hud /></div>
+    </div>
+
+    <footer>
+      ← → move · ↓ soft · space hard · Z/X rotate · A flip · C hold · P pause · R restart
+    </footer>
+  </main>
+</template>
+
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, provide, ref } from 'vue'
 import { boardToStrings, hashBoard } from '@tetris/core'
@@ -57,56 +107,6 @@ function downloadReplay(): void {
   URL.revokeObjectURL(url)
 }
 </script>
-
-<template>
-  <main class="debug">
-    <header>
-      <h1>DEBUG · 2D REFERENCE</h1>
-      <nav>
-        <NuxtLink to="/play">3D</NuxtLink>
-        <NuxtLink to="/">MENU</NuxtLink>
-      </nav>
-    </header>
-
-    <div class="stage">
-      <Board2D :cell="26" />
-
-      <aside class="tools panel">
-        <div class="row">
-          <button @click="session.togglePause()">{{ session.paused.value ? 'RESUME' : 'PAUSE' }}</button>
-          <button @click="session.restart()">RESTART</button>
-        </div>
-        <div class="row">
-          <button :disabled="!session.paused.value" @click="session.step(1)">STEP 1</button>
-          <button :disabled="!session.paused.value" @click="session.step(6)">STEP 6</button>
-        </div>
-        <div class="row">
-          <button @click="session.bot.value = !session.bot.value">
-            BOT {{ session.bot.value ? 'ON' : 'OFF' }}
-          </button>
-          <button @click="downloadReplay()">SAVE REPLAY</button>
-          <button @click="showState = !showState">{{ showState ? 'HIDE' : 'SHOW' }} STATE</button>
-        </div>
-
-        <dl>
-          <dt>seed</dt><dd>{{ session.currentSeed.value }}</dd>
-          <dt>phase</dt><dd>{{ session.hud.phase }}</dd>
-          <dt>hash</dt><dd>{{ boardHash }}</dd>
-          <dt>frame</dt><dd>{{ session.quality.frameMs.value.toFixed(1) }} ms</dd>
-          <dt>tier</dt><dd>{{ session.quality.tier.value }}</dd>
-        </dl>
-
-        <pre v-if="showState" class="dump">{{ rows.join('\n') }}</pre>
-      </aside>
-
-      <div class="hud-host"><GameHud /></div>
-    </div>
-
-    <footer>
-      ← → move · ↓ soft · space hard · Z/X rotate · A flip · C hold · P pause · R restart
-    </footer>
-  </main>
-</template>
 
 <style scoped>
 .debug { height: 100dvh; display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem; }

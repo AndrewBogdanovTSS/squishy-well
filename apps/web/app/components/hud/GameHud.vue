@@ -1,24 +1,9 @@
-<script setup lang="ts">
-import { computed, inject } from 'vue'
-import { GameSessionKey } from '~/composables/useGameSession'
-import PiecePreview from './PiecePreview.vue'
-
-const session = inject(GameSessionKey)!
-const hud = session.hud
-
-const timeLabel = computed(() => {
-  const s = Math.floor(hud.timeMs / 1000)
-  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
-})
-const pps = computed(() => (hud.timeMs > 0 ? (hud.pieces / (hud.timeMs / 1000)).toFixed(2) : '0.00'))
-</script>
-
 <template>
   <div class="hud">
     <section class="panel side left" aria-label="Hold piece">
       <h2>HOLD</h2>
       <div class="slot">
-        <PiecePreview :piece="hud.hold" :dim="!hud.canHold" />
+        <piece-preview :piece="hud.hold" :dim="!hud.canHold" />
       </div>
 
       <dl class="stats">
@@ -49,12 +34,27 @@ const pps = computed(() => (hud.timeMs > 0 ? (hud.pieces / (hud.timeMs / 1000)).
       <h2>NEXT</h2>
       <ol class="next">
         <li v-for="(p, i) in hud.next" :key="`${p}-${i}`">
-          <PiecePreview :piece="p" :size="i === 0 ? 18 : 13" />
+          <piece-preview :piece="p" :size="i === 0 ? 18 : 13" />
         </li>
       </ol>
     </section>
   </div>
 </template>
+
+<script setup lang="ts">
+import { computed, inject } from 'vue'
+import { GameSessionKey } from '~/composables/useGameSession'
+import PiecePreview from './PiecePreview.vue'
+
+const session = inject(GameSessionKey)!
+const hud = session.hud
+
+const timeLabel = computed(() => {
+  const s = Math.floor(hud.timeMs / 1000)
+  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+})
+const pps = computed(() => (hud.timeMs > 0 ? (hud.pieces / (hud.timeMs / 1000)).toFixed(2) : '0.00'))
+</script>
 
 <style scoped>
 .hud {

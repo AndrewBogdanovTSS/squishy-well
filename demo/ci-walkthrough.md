@@ -24,11 +24,18 @@ tick:
 |---|---|
 | A grounded review passes the claim linter | the repaired fixture stays clean |
 | An ungrounded review still fails it | **the broken fixture stays broken** |
-| A valid access receipt passes | the good receipt still resolves |
+| A commit-mismatched artifact is rejected | v2 addressing catches evidence collected at the wrong commit |
+| A phantom artifact id is rejected | `VERIFIED[id]` cannot reference nothing |
+| A shotgun artifact is a warning, not a failure | one real artifact backing too many claims still builds |
+| The taste/semantic-truth boundaries hold | `docs/evidence-layer.md`'s own limits, executable |
+| A valid access receipt passes | the good receipt still resolves, with one quote per cited file |
 | A stale baseline is caught | the stale-base failure is still detected |
 | The README still tells the truth | every claim in `README.md` |
 | Engine behaviour is unchanged | the three replay fingerprints |
+| A runtime-composed trigger downgrades honestly | `unverifiable`, never a silent `pass` |
 | Governance | whether anything actually runs the above |
+
+Full fixture list, including these: [`demo/README.md`](../demo/README.md).
 
 The two negative steps matter as much as the positive ones. A checker that
 quietly stops finding things is worse than no checker, because nobody notices. If

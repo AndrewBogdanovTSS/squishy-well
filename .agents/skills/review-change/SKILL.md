@@ -45,6 +45,12 @@ This is the step people skip, and skipping it is not laziness - it is that
 gathering sits off the path you are on once you have started composing findings.
 Running it first removes the decision.
 
+`evidence.local.md` now includes a **Suggested claims** section and a
+**Suggested sample integrity** section - each artifact's id already
+substituted, each changed file's first line already quoted. Writing the review
+should mean copying blocks out of that file and deleting the ones that do not
+apply, not looking anything up by hand.
+
 If engine files changed, also run:
 
 ```sh
@@ -88,6 +94,7 @@ the demo fixtures. Treat a passing self-check as a self-report, not as proof.
 Before handing over, confirm:
 
 1. The receipt's base came from `origin/<target>`, not a local branch name.
-2. Every `VERIFIED` sits next to a command someone else can re-run.
-3. Every location cited resolves at the reviewed commit.
+2. Every `VERIFIED[id]` addresses a real artifact someone else can re-run, collected at the reviewed commit.
+3. Every location cited resolves at the reviewed commit, and every cited file carries its own verbatim sample quote.
 4. Anything skipped is disclosed at the top, per the execution receipt rule.
+5. If this review's own verdict on a prior review turned out to be a miss, that commit's message names it - see AGENTS.md § Recording a miss.

@@ -1,3 +1,7 @@
+<template>
+  <primitive :object="group" />
+</template>
+
 <script setup lang="ts">
 import { inject, onBeforeUnmount, shallowRef, watch } from 'vue'
 import * as THREE from 'three/webgpu'
@@ -48,7 +52,3 @@ onBeforeUnmount(() => {
 
 defineExpose({ mode: () => vfx.value?.mode ?? 'off' })
 </script>
-
-<template>
-  <primitive :object="group" />
-</template>

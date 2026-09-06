@@ -1,3 +1,7 @@
+<template>
+  <canvas ref="canvas" class="board2d" aria-hidden="true" />
+</template>
+
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, inject } from 'vue'
 import { COLS, VISIBLE_ROWS, codeToType, idx } from '@tetris/core'
@@ -9,10 +13,7 @@ import { GHOST_COLOR, PALETTE } from '~/config/palette'
  * which makes it the fastest way to tell "is this a logic bug or a render bug".
  * It is also fully deterministic, so it is what visual snapshots are taken of.
  */
-const props = withDefaults(defineProps<{ cell?: number; showGrid?: boolean }>(), {
-  cell: 24,
-  showGrid: true,
-})
+const { cell = 24, showGrid = true } = defineProps<{ cell?: number; showGrid?: boolean }>()
 
 const session = inject(GameSessionKey)!
 const canvas = ref<HTMLCanvasElement | null>(null)
@@ -26,8 +27,8 @@ function draw(): void {
   if (!ctx) return
 
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
-  const w = COLS * props.cell
-  const h = VISIBLE_ROWS * props.cell
+  const w = COLS * cell
+  const h = VISIBLE_ROWS * cell
   if (el.width !== w * dpr || el.height !== h * dpr) {
     el.width = w * dpr
     el.height = h * dpr
@@ -40,25 +41,25 @@ function draw(): void {
   ctx.fillStyle = '#080c16'
   ctx.fillRect(0, 0, w, h)
 
-  if (props.showGrid) {
+  if (showGrid) {
     ctx.strokeStyle = 'rgba(148,163,184,0.10)'
     ctx.lineWidth = 1
     for (let x = 1; x < COLS; x++) {
       ctx.beginPath()
-      ctx.moveTo(x * props.cell + 0.5, 0)
-      ctx.lineTo(x * props.cell + 0.5, h)
+      ctx.moveTo(x * cell + 0.5, 0)
+      ctx.lineTo(x * cell + 0.5, h)
       ctx.stroke()
     }
     for (let y = 1; y < VISIBLE_ROWS; y++) {
       ctx.beginPath()
-      ctx.moveTo(0, y * props.cell + 0.5)
-      ctx.lineTo(w, y * props.cell + 0.5)
+      ctx.moveTo(0, y * cell + 0.5)
+      ctx.lineTo(w, y * cell + 0.5)
       ctx.stroke()
     }
   }
 
-  const px = (bx: number) => bx * props.cell
-  const py = (by: number) => (VISIBLE_ROWS - 1 - by) * props.cell
+  const px = (bx: number) => bx * cell
+  const py = (by: number) => (VISIBLE_ROWS - 1 - by) * cell
 
   const board = session.board
   const clearing = session.clearAnim.value
@@ -75,7 +76,7 @@ function draw(): void {
           ? '#ffffff'
           : `rgba(255,255,255,${Math.max(0, 1 - flashPhase * 1.6)})`
         : PALETTE[codeToType(v)]
-      ctx.fillRect(px(x) + 1, py(y) + 1, props.cell - 2, props.cell - 2)
+      ctx.fillRect(px(x) + 1, py(y) + 1, cell - 2, cell - 2)
     }
   }
 
@@ -85,7 +86,7 @@ function draw(): void {
   for (const c of session.engine.ghostCells()) {
     if (c.y >= VISIBLE_ROWS) continue
     ctx.fillStyle = GHOST_COLOR
-    ctx.fillRect(px(c.x) + 2, py(c.y) + 2, props.cell - 4, props.cell - 4)
+    ctx.fillRect(px(c.x) + 2, py(c.y) + 2, cell - 4, cell - 4)
   }
   ctx.restore()
 
@@ -93,9 +94,9 @@ function draw(): void {
   for (const c of session.engine.activeCells()) {
     if (c.y >= VISIBLE_ROWS) continue
     ctx.fillStyle = PALETTE[c.type]
-    ctx.fillRect(px(c.x) + 1, py(c.y) + 1, props.cell - 2, props.cell - 2)
+    ctx.fillRect(px(c.x) + 1, py(c.y) + 1, cell - 2, cell - 2)
     ctx.strokeStyle = 'rgba(255,255,255,0.35)'
-    ctx.strokeRect(px(c.x) + 1.5, py(c.y) + 1.5, props.cell - 3, props.cell - 3)
+    ctx.strokeRect(px(c.x) + 1.5, py(c.y) + 1.5, cell - 3, cell - 3)
   }
 
   if (session.paused.value || session.gameOver.value) {
@@ -113,10 +114,6 @@ onMounted(() => {
 })
 onBeforeUnmount(() => cancelAnimationFrame(raf))
 </script>
-
-<template>
-  <canvas ref="canvas" class="board2d" aria-hidden="true" />
-</template>
 
 <style scoped>
 .board2d {

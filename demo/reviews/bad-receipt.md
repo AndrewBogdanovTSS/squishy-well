@@ -7,6 +7,13 @@
 > baseline that has gone stale, a file quoted that was never opened, and one
 > citation that does not resolve. Read it first without running anything: it
 > looks completely normal, which is the entire problem.
+>
+> v2: this file was already, by accident, the clearest possible demonstration
+> of Improvement 6 before that check existed to name it - the one file it
+> quotes (`three.ts`) is not even among the files its own claims cite
+> (`nowhere.ts`, `eslint.config.js`). "A file was opened" and "the files this
+> review is about were opened" were never the same claim; this is what it looks
+> like when only the first one is true.
 
 ## Access Receipt
 

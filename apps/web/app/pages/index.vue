@@ -1,7 +1,3 @@
-<script setup lang="ts">
-useHead({ title: 'NEON WELL — a WebGPU tetris' })
-</script>
-
 <template>
   <main class="landing">
     <div class="glow" aria-hidden="true" />
@@ -13,8 +9,8 @@ useHead({ title: 'NEON WELL — a WebGPU tetris' })
         pipeline with compute-shader debris.
       </p>
       <div class="actions">
-        <NuxtLink to="/play" class="cta">PLAY</NuxtLink>
-        <NuxtLink to="/debug" class="ghost">2D DEBUG</NuxtLink>
+        <nuxt-link to="/play" class="cta">PLAY</nuxt-link>
+        <nuxt-link to="/debug" class="ghost">2D DEBUG</nuxt-link>
       </div>
       <ul class="notes">
         <li>Falls back to WebGL2 automatically; particles switch to a CPU pool.</li>
@@ -23,6 +19,10 @@ useHead({ title: 'NEON WELL — a WebGPU tetris' })
     </section>
   </main>
 </template>
+
+<script setup lang="ts">
+useHead({ title: 'NEON WELL — a WebGPU tetris' })
+</script>
 
 <style scoped>
 .landing {

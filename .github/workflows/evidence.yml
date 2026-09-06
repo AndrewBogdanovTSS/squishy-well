@@ -101,6 +101,34 @@ jobs:
           fi
           echo "the broken review was rejected, as it should be"
 
+      # --- Addressed artifacts (v2) --------------------------------------------
+      - name: A real artifact collected at the wrong commit is still rejected
+        run: |
+          if pnpm check:claims demo/reviews/mismatched-artifact.md; then
+            echo "::error::a commit-mismatched artifact was accepted - addressing has stopped working"
+            exit 1
+          fi
+          echo "the commit mismatch was caught, as it should be"
+
+      - name: A phantom artifact id is rejected
+        run: |
+          if pnpm check:claims demo/reviews/phantom-artifact.md; then
+            echo "::error::a phantom artifact id was accepted - existence checking has stopped working"
+            exit 1
+          fi
+          echo "the phantom id was caught, as it should be"
+
+      - name: One artifact backing too many claims is a warning, not a build failure
+        run: pnpm check:claims demo/reviews/shotgun-artifact.md
+
+      - name: The taste and semantic-truth boundaries behave exactly as documented
+        run: |
+          if pnpm check:claims demo/reviews/boundary-limits.md; then
+            echo "::error::boundary-limits.md was expected to fail on its one deliberate claim"
+            exit 1
+          fi
+          echo "exactly the one deliberate failure fired, as documented in the fixture"
+
       # --- Access receipts ----------------------------------------------------
       - name: A valid access receipt passes
         run: pnpm check:receipt demo/reviews/good-receipt.md
@@ -119,6 +147,15 @@ jobs:
 
       - name: Engine behaviour is unchanged
         run: pnpm fingerprint
+
+      # --- Governance's own boundary cases (v2) --------------------------------
+      - name: A self-disclosed runtime-composed trigger downgrades to unverifiable, never a silent pass
+        run: |
+          out=$(pnpm check:all --only reachability --decisions demo/decisions/runtime-composed --no-json)
+          echo "$out"
+          echo "$out" | grep -q '\[ ?? \]' || { echo "::error::expected an unverifiable finding, got something else"; exit 1; }
+          echo "$out" | grep -q '\[ ok \]' && { echo "::error::a runtime-composed trigger must never silently pass"; exit 1; }
+          echo "correctly reported unverifiable, neither a false error nor a silent pass"
 
       # --- And the check that checks the checks -------------------------------
       - name: Governance - is anything actually running these?

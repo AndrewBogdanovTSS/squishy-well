@@ -12,14 +12,22 @@
  * This script does the work. It is the smallest possible version of the whole
  * idea: a claim, a command, an exit code. No AI anywhere in the story.
  *
- * Exit codes: 0 every checkable claim holds - 1 at least one is wrong - 2 bad usage.
+ * This is the tetris-specific adapter script: it knows about this project's
+ * routes, pinned versions and fixture shape. The generic pieces - argument
+ * parsing, the outcome model, running a command, the flaky/journal policy -
+ * come from the portable `evidence-layer` package; see
+ * `packages/evidence-layer/README.md` for what "portable" actually covers.
+ *
+ * Exit codes: 0 every checkable claim holds - 1 at least one is wrong -
+ * 3 flaky (the test-count check only) - 2 bad usage.
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { EXIT, exitCodeFor, parseArgs, report, usage } from './lib/cli'
-import type { Finding } from './lib/cli'
-import { run } from './lib/proc'
+import { EXIT, exitCodeFor, parseArgs, report, run, usage } from 'evidence-layer'
+import type { Finding } from 'evidence-layer'
+import { applyFlakyPolicy } from 'evidence-layer'
+import { measureDirSize, parseTestCount } from 'evidence-layer/adapters/node-default'
 
 const HELP = `
 pnpm check:docs [--repo <path>] [--skip test] [--strict]
@@ -30,8 +38,11 @@ Checks the numeric and structural claims the README makes about this repository.
   --skip    comma-separated checks to skip: test, fixtures, routes, pins, build
   --strict  treat warnings and unverifiable results as failures
 
-exit 0 = every checkable claim holds, 1 = at least one is wrong, 2 = bad usage
+exit 0 = every checkable claim holds, 1 = at least one is wrong,
+3 = flaky (see journal.jsonl), 2 = bad usage
 `
+
+const JOURNAL_PATH = 'journal.jsonl'
 
 /** README text with line breaks flattened, so a claim may span two lines. */
 function flatten(text: string): string {
@@ -48,8 +59,12 @@ function lineOf(lines: string[], re: RegExp): number | undefined {
  * "71 tests" and "71/71 green" - the headline claim, and the only slow check.
  * It has to run the suite, because counting `it(` calls statically gets the
  * wrong answer: two of these files use `it.each`, which expands at runtime.
+ *
+ * This is also the one check in the layer with a plausible flaky failure mode
+ * (an underlying `pnpm test` hiccup), so its result - and only its result -
+ * goes through the journal's flaky policy before being reported.
  */
-export function checkTestCount(repo: string, readme: string, lines: string[]): Finding[] {
+export function checkTestCount(repo: string, readme: string, lines: string[], headSha: string): Finding[] {
   const claimed = /(\d+) tests:/.exec(flatten(readme))
   const green = /(\d+)\/(\d+) green/.exec(flatten(readme))
   if (!claimed && !green) {
@@ -57,8 +72,8 @@ export function checkTestCount(repo: string, readme: string, lines: string[]): F
   }
 
   const res = run('pnpm test', { cwd: repo, timeoutMs: 300_000 })
-  const total = /Tests\s+(\d+) passed \((\d+)\)/.exec(res.output)
-  if (!total) {
+  const actual = parseTestCount(res.output)
+  if (actual === null) {
     return [
       {
         level: 'unverifiable',
@@ -69,14 +84,13 @@ export function checkTestCount(repo: string, readme: string, lines: string[]): F
     ]
   }
 
-  const actual = Number(total[2])
   const findings: Finding[] = []
   if (claimed) {
     const n = Number(claimed[1])
     findings.push({
       level: n === actual ? 'pass' : 'error',
       claim: 'README says the suite has ' + n + ' tests',
-      detail: n === actual ? 'the suite reports ' + actual : 'the suite reports ' + actual,
+      detail: 'the suite reports ' + actual,
       file: 'README.md',
       line: lineOf(lines, /(\d+) tests:/),
     })
@@ -91,7 +105,7 @@ export function checkTestCount(repo: string, readme: string, lines: string[]): F
       line: lineOf(lines, /\d+\/\d+ green/),
     })
   }
-  return findings
+  return applyFlakyPolicy(JOURNAL_PATH, 'check:docs/test-count', headSha, findings)
 }
 
 /**
@@ -217,8 +231,7 @@ export function checkBuildSize(repo: string, readme: string): Finding[] {
     ]
   }
 
-  const du = run('node -e "const{statSync,readdirSync}=require(\'fs\');const{join}=require(\'path\');const w=d=>readdirSync(d,{withFileTypes:true}).reduce((n,e)=>n+(e.isDirectory()?w(join(d,e.name)):statSync(join(d,e.name)).size),0);console.log(w(process.argv[1]))"' + ' "' + outDir + '"', { cwd: repo, timeoutMs: 60_000 })
-  const bytes = Number(du.output.trim())
+  const bytes = measureDirSize(outDir)
   if (!Number.isFinite(bytes) || bytes === 0) {
     return [
       {
@@ -257,13 +270,14 @@ function main(): void {
   }
   const readme = readFileSync(readmePath, 'utf8')
   const lines = readme.split(/\r?\n/)
+  const headSha = run('git rev-parse HEAD', { cwd: repo, timeoutMs: 10_000 }).output.trim()
 
   const findings: Finding[] = []
   if (!skip.includes('fixtures')) findings.push(...checkFixtureNumbers(repo, readme, lines))
   if (!skip.includes('routes')) findings.push(...checkRoutes(repo, readme))
   if (!skip.includes('pins')) findings.push(...checkPinnedVersions(repo, readme))
   if (!skip.includes('build')) findings.push(...checkBuildSize(repo, readme))
-  if (!skip.includes('test')) findings.push(...checkTestCount(repo, readme, lines))
+  if (!skip.includes('test')) findings.push(...checkTestCount(repo, readme, lines, headSha))
 
   report('README claims', findings)
   process.exit(exitCodeFor(findings, args.strict === true))

@@ -1,3 +1,7 @@
+<template>
+  <primitive :object="mesh" />
+</template>
+
 <script setup lang="ts">
 import { inject, onBeforeUnmount } from 'vue'
 import * as THREE from 'three/webgpu'
@@ -60,7 +64,3 @@ onBeforeUnmount(() => {
   mesh.dispose()
 })
 </script>
-
-<template>
-  <primitive :object="mesh" />
-</template>

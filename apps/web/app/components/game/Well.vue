@@ -1,3 +1,7 @@
+<template>
+  <primitive :object="group" />
+</template>
+
 <script setup lang="ts">
 import { onBeforeUnmount } from 'vue'
 import * as THREE from 'three/webgpu'
@@ -65,7 +69,3 @@ onBeforeUnmount(() => {
   })
 })
 </script>
-
-<template>
-  <primitive :object="group" />
-</template>
