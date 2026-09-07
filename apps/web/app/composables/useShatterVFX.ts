@@ -78,8 +78,12 @@ function createGpuVFX(pool: number, perCell: number): ShatterVFX {
       const jitter = vec3(r1.sub(0.5), r2.sub(0.5), r3.sub(0.5)).mul(0.95)
       bufPos.element(slot).assign(origin.add(jitter))
 
-      // radially outward from the cell, biased upwards so debris arcs
-      const dir = normalize(vec3(r1.sub(0.5), r2.sub(0.15), r3.sub(0.5)).add(vec3(0, 0.25, 0)))
+      // Outward and down. The blocks read as liquid containers, so what comes
+      // out of them should fall rather than arc: the vertical term runs from
+      // well below the horizontal spread to only slightly above it, which
+      // leaves a little upward spray at the moment of the burst and nothing
+      // that hangs in the air afterwards.
+      const dir = normalize(vec3(r1.sub(0.5), r2.sub(0.5).mul(1.2).sub(0.4), r3.sub(0.5)))
       bufVel.element(slot).assign(dir.mul(uSpeed.mul(r4.mul(0.7).add(0.55))))
       bufColor.element(slot).assign(asVec3(uColors.element(cell)))
       bufLife
@@ -104,7 +108,7 @@ function createGpuVFX(pool: number, perCell: number): ShatterVFX {
         bufPos.element(instanceIndex).assign(vec3(np.x, float(FLOOR_Y), np.z))
         bufVel
           .element(instanceIndex)
-          .assign(vec3(nv.x.mul(0.7), nv.y.abs().mul(float(liveFeel.particles.bounce)), nv.z.mul(0.7)))
+          .assign(vec3(nv.x.mul(0.45), nv.y.abs().mul(float(liveFeel.particles.bounce)), nv.z.mul(0.45)))
       })
       If(np.y.greaterThanEqual(float(FLOOR_Y)), () => {
         bufPos.element(instanceIndex).assign(np)
@@ -245,8 +249,9 @@ function createCpuVFX(pool: number, perCell: number): ShatterVFX {
           pos[i * 3] = ox + (Math.random() - 0.5) * 0.95
           pos[i * 3 + 1] = oy + (Math.random() - 0.5) * 0.95
           pos[i * 3 + 2] = (Math.random() - 0.5) * 0.95
+          // same downward bias as the GPU path above
           const dx = Math.random() - 0.5
-          const dy = Math.random() - 0.15 + 0.25
+          const dy = (Math.random() - 0.5) * 1.2 - 0.4
           const dz = Math.random() - 0.5
           const len = Math.hypot(dx, dy, dz) || 1
           const speed = f.speed * (0.55 + Math.random() * 0.7)
@@ -286,8 +291,8 @@ function createCpuVFX(pool: number, perCell: number): ShatterVFX {
         if (py < FLOOR_Y) {
           py = FLOOR_Y
           vy = Math.abs(vy) * f.bounce
-          vx *= 0.7
-          vz *= 0.7
+          vx *= 0.45
+          vz *= 0.45
         }
         pos[i * 3] = px
         pos[i * 3 + 1] = py

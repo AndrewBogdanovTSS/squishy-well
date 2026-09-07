@@ -5,14 +5,14 @@
 <script setup lang="ts">
 import { inject, onBeforeUnmount } from 'vue'
 import * as THREE from 'three/webgpu'
-import { instancedBufferAttribute, uniform } from 'three/tsl'
+import { instancedBufferAttribute } from 'three/tsl'
 import { useLoop } from '@tresjs/core'
 import { cellsOf } from '@tetris/core'
 import { GameSessionKey } from '~/composables/useGameSession'
 import { PALETTE, PALETTE_ACCESSIBLE } from '~/config/palette'
 import { liveFeel } from '~/config/feel'
-import { asVec3 } from '~/lib/tsl'
-import { blockGeometry, worldX, worldY } from '~/lib/three'
+import { asFloat, asVec3 } from '~/lib/tsl'
+import { blockGeometry, blockMaterial, worldX, worldY } from '~/lib/three'
 
 const { accessible = false } = defineProps<{ accessible?: boolean }>()
 const session = inject(GameSessionKey)!
@@ -25,11 +25,13 @@ const colorArray = new Float32Array(4 * 3)
 const colorAttr = new THREE.InstancedBufferAttribute(colorArray, 3)
 colorAttr.setUsage(THREE.DynamicDrawUsage)
 
-const emissive = uniform(1.05)
+// seeded by slot within the piece, so the four cells differ from each other but
+// none of them churns while the piece is falling
+const seedAttr = new THREE.InstancedBufferAttribute(new Float32Array([0.4, 2.9, 5.6, 8.1]), 1)
+
 const colorNode = asVec3(instancedBufferAttribute(colorAttr))
-const material = new THREE.MeshStandardNodeMaterial({ roughness: 0.28, metalness: 0.05 })
-material.colorNode = colorNode
-material.emissiveNode = colorNode.mul(emissive)
+// brighter than the stack: the piece you are steering should hold the eye
+const material = blockMaterial(colorNode, 0.4, asFloat(instancedBufferAttribute(seedAttr)))
 
 const mesh = new THREE.InstancedMesh(blockGeometry(), material, 4)
 mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
@@ -96,7 +98,6 @@ onBeforeRender(({ delta }) => {
   mesh.instanceMatrix.needsUpdate = true
   colorAttr.needsUpdate = true
 })
-
 onBeforeUnmount(() => {
   offRotate()
   material.dispose()

@@ -41,5 +41,5 @@ export const GLYPHS: Record<PieceType, string> = {
 }
 
 export const GHOST_COLOR = '#94a3b8'
-export const WELL_COLOR = '#1e293b'
+export const WELL_COLOR = '#05070c'
 export const GRID_COLOR = '#334155'

@@ -70,12 +70,15 @@ export const feel = {
     poolHigh: 32768,
     poolMedium: 16384,
     poolCpu: 2000,
-    gravity: -18,
-    drag: 0.8,
-    bounce: 0.35,
-    lifeMin: 0.55,
-    lifeMax: 1.35,
-    speed: 7.5,
+    // Tuned as spilled liquid rather than debris: heavy, quick to fall, and
+    // barely bouncing. Water leaving a burst container goes sideways and then
+    // straight down - it does not arc.
+    gravity: -38,
+    drag: 1.6,
+    bounce: 0.12,
+    lifeMin: 0.5,
+    lifeMax: 1.15,
+    speed: 6,
   },
   audio: {
     master: 0.5,

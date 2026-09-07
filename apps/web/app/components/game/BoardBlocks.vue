@@ -5,14 +5,14 @@
 <script setup lang="ts">
 import { inject, onBeforeUnmount, watch } from 'vue'
 import * as THREE from 'three/webgpu'
-import { instancedBufferAttribute, uniform } from 'three/tsl'
+import { instancedBufferAttribute } from 'three/tsl'
 import { useLoop } from '@tresjs/core'
 import { COLS, VISIBLE_ROWS, codeToType, idx } from '@tetris/core'
 import { GameSessionKey } from '~/composables/useGameSession'
 import { PALETTE, PALETTE_ACCESSIBLE } from '~/config/palette'
 import { liveFeel } from '~/config/feel'
-import { asVec3 } from '~/lib/tsl'
-import { blockGeometry, clamp01, easeOutBack, easeOutCubic, worldX, worldY } from '~/lib/three'
+import { asFloat, asVec3 } from '~/lib/tsl'
+import { blockGeometry, blockMaterial, clamp01, easeOutBack, easeOutCubic, worldX, worldY } from '~/lib/three'
 
 const { accessible = false } = defineProps<{ accessible?: boolean }>()
 const session = inject(GameSessionKey)!
@@ -29,12 +29,15 @@ const colorArray = new Float32Array(MAX * 3)
 const colorAttr = new THREE.InstancedBufferAttribute(colorArray, 3)
 colorAttr.setUsage(THREE.DynamicDrawUsage)
 
-const emissive = uniform(0.5)
-const colorNode = asVec3(instancedBufferAttribute(colorAttr))
+// Seeded off the board cell, not the instance slot: slots are reassigned every
+// time the stack changes, so seeding from those would reshuffle every block's
+// insides on each lock.
+const seedArray = new Float32Array(MAX)
+const seedAttr = new THREE.InstancedBufferAttribute(seedArray, 1)
+seedAttr.setUsage(THREE.DynamicDrawUsage)
 
-const material = new THREE.MeshStandardNodeMaterial({ roughness: 0.34, metalness: 0.04 })
-material.colorNode = colorNode
-material.emissiveNode = colorNode.mul(emissive)
+const colorNode = asVec3(instancedBufferAttribute(colorAttr))
+const material = blockMaterial(colorNode, 0.24, asFloat(instancedBufferAttribute(seedAttr)))
 
 const mesh = new THREE.InstancedMesh(geometry, material, MAX)
 mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
@@ -81,12 +84,14 @@ function syncBoard(): void {
       colorArray[n * 3 + 2] = _c.b
       instanceRow[n] = y
       instanceCol[n] = x
+      seedArray[n] = (x * 7.31 + y * 3.17) % 9.7
       n++
     }
   }
   mesh.count = n
   mesh.instanceMatrix.needsUpdate = true
   colorAttr.needsUpdate = true
+  seedAttr.needsUpdate = true
 }
 
 watch(() => session.boardVersion.value, syncBoard, { immediate: true })
