@@ -1,4 +1,3 @@
-import { markRaw, reactive, ref, shallowRef, type InjectionKey } from 'vue'
 import {
   BotPlayer,
   STEP_MS,
@@ -12,11 +11,6 @@ import {
   type Replay,
 } from '@tetris/core'
 import { liveFeel } from '~/config/feel'
-import { createEventBus } from './useEventBus'
-import { createInput, type Binding } from './useInput'
-import { createImpactBus } from './useImpactBus'
-import { createAudio } from './useAudio'
-import { useQualityTier } from './useQualityTier'
 
 export interface ClearAnimation {
   rows: number[]

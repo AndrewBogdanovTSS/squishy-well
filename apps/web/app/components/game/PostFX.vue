@@ -3,14 +3,11 @@
 </template>
 
 <script setup lang="ts">
-import { inject, onBeforeUnmount, shallowRef, watch } from 'vue'
 import * as THREE from 'three/webgpu'
 import { float, pass, uniform, vec2 } from 'three/tsl'
 import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 import { chromaticAberration } from 'three/addons/tsl/display/ChromaticAberrationNode.js'
 import { fxaa } from 'three/addons/tsl/display/FXAANode.js'
-import { useLoop, useTresContext } from '@tresjs/core'
-import { GameSessionKey } from '~/composables/useGameSession'
 import { liveFeel } from '~/config/feel'
 
 const session = inject(GameSessionKey)!

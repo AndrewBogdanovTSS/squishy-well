@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "test:e2e": "pnpm --filter @tetris/web test:e2e",
     "check:docs": "tsx scripts/check-docs.ts",
+    "check:styles": "tsx scripts/check-styles.ts",
     "check:claims": "tsx packages/evidence-layer/bin/check-claims.ts",
     "check:receipt": "tsx packages/evidence-layer/bin/check-receipt.ts",
     "check:all": "tsx scripts/governance.ts",

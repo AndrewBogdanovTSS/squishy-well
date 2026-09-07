@@ -1,6 +1,6 @@
 <template>
   <div
-    class="preview"
+    class="relative"
     :style="{
       width: `${layout.w * size}px`,
       height: `${layout.h * size}px`,
@@ -10,7 +10,7 @@
     <span
       v-for="(c, i) in layout.cells"
       :key="i"
-      class="cell"
+      class="absolute rounded-0.75 shadow-[0_0_8px_currentColor]"
       :style="{
         left: `${c.x * size}px`,
         top: `${c.y * size}px`,
@@ -23,7 +23,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { cellsOf, type PieceType } from '@tetris/core'
 import { PALETTE } from '~/config/palette'
 
@@ -44,12 +43,3 @@ const layout = computed(() => {
   }
 })
 </script>
-
-<style scoped>
-.preview { position: relative; }
-.cell {
-  position: absolute;
-  border-radius: 3px;
-  box-shadow: 0 0 8px currentColor;
-}
-</style>

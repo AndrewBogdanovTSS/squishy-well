@@ -1,5 +1,4 @@
 import { liveFeel } from '~/config/feel'
-import type { EventBus } from './useEventBus'
 
 /**
  * One source of truth for "the picture got hit": screen shake, chromatic

@@ -1,67 +1,86 @@
 <template>
-  <main ref="stage" class="play">
+  <main ref="stage" class="relative w-screen h-dvh overflow-hidden">
     <client-only>
       <game-canvas :accessible="settings.accessiblePalette" />
       <template #fallback>
-        <div class="boot">initialising renderer…</div>
+        <div class="absolute inset-0 grid place-items-center c-$muted text-body tracking-caps">
+          initialising renderer…
+        </div>
       </template>
     </client-only>
 
     <game-hud />
 
-    <div class="topbar">
-      <nuxt-link to="/" class="link">← MENU</nuxt-link>
-      <span class="badge">{{ backendLabel }} · {{ session.quality.tier.value }}<template v-if="session.bot.value"> · BOT</template></span>
-      <button class="link" @click="showSettings = !showSettings">SETTINGS</button>
+    <div
+      class="absolute top-0 left-0 right-0 flex justify-center items-center gap-4 p-3 text-label tracking-caps"
+    >
+      <nuxt-link to="/" class="c-$muted no-underline b-none py-0.8 px-1.6 hover:c-$accent">
+        ← MENU
+      </nuxt-link>
+      <span class="c-$accent opacity-75"
+        >{{ backendLabel }} · {{ session.quality.tier.value }}<template v-if="session.bot.value"> · BOT</template></span
+      >
+      <button
+        class="c-$muted no-underline b-none py-0.8 px-1.6 hover:c-$accent"
+        @click="showSettings = !showSettings"
+      >
+        SETTINGS
+      </button>
     </div>
 
     <transition name="fade">
-      <div v-if="session.paused.value && !session.gameOver.value" class="overlay">
-        <div class="panel card">
-          <h2>PAUSED</h2>
-          <button @click="session.togglePause(false)">RESUME</button>
-          <button @click="session.restart()">RESTART</button>
-          <nuxt-link to="/" class="btnlink">QUIT</nuxt-link>
+      <div
+        v-if="session.paused.value && !session.gameOver.value"
+        class="absolute inset-0 grid place-items-center bg-[rgb(var(--bg-rgb)/72%)] [backdrop-filter:blur(6px)]"
+      >
+        <div class="panel p-6 f-col gap-2.4 min-w-60 text-center">
+          <h2 class="m-0 mb-2 tracking-title text-lead c-$accent">PAUSED</h2>
+          <game-button @click="session.togglePause(false)">RESUME</game-button>
+          <game-button @click="session.restart()">RESTART</game-button>
+          <game-button to="/" variant="quiet">QUIT</game-button>
         </div>
       </div>
     </transition>
 
     <transition name="fade">
-      <div v-if="session.gameOver.value" class="overlay">
-        <div class="panel card">
-          <h2>GAME OVER</h2>
-          <dl>
-            <dt>SCORE</dt><dd>{{ session.hud.score.toLocaleString('en-US') }}</dd>
-            <dt>LINES</dt><dd>{{ session.hud.lines }}</dd>
-            <dt>LEVEL</dt><dd>{{ session.hud.level }}</dd>
-            <dt>BEST</dt><dd>{{ settings.best.toLocaleString('en-US') }}</dd>
+      <div
+        v-if="session.gameOver.value"
+        class="absolute inset-0 grid place-items-center bg-[rgb(var(--bg-rgb)/72%)] [backdrop-filter:blur(6px)]"
+      >
+        <div class="panel p-6 f-col gap-2.4 min-w-60 text-center">
+          <h2 class="m-0 mb-2 tracking-title text-lead c-$accent">GAME OVER</h2>
+          <dl class="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.8 m-0 mb-3 text-body">
+            <template v-for="s in gameOverStats" :key="s.label">
+              <dt class="c-$muted text-left">{{ s.label }}</dt>
+              <dd class="m-0 tabular-nums">{{ s.value }}</dd>
+            </template>
           </dl>
-          <button @click="session.restart()">AGAIN</button>
-          <nuxt-link to="/" class="btnlink">MENU</nuxt-link>
+          <game-button @click="session.restart()">AGAIN</game-button>
+          <game-button to="/" variant="quiet">MENU</game-button>
         </div>
       </div>
     </transition>
 
     <transition name="fade">
-      <aside v-if="showSettings" class="panel settings">
-        <h2>SETTINGS</h2>
-        <label>
+      <aside v-if="showSettings" class="panel panel-pad absolute top-12 right-4 f-col gap-2.4 w-68 text-xs">
+        <h2 class="m-0 text-label tracking-caps c-$muted">SETTINGS</h2>
+        <label class="flex items-center gap-2">
           <input v-model="settings.accessiblePalette" type="checkbox" >
           High-contrast palette
         </label>
-        <label>
+        <label class="flex items-center gap-2">
           <input v-model="settings.forceReducedMotion" type="checkbox" >
           Reduce motion &amp; flashes
         </label>
-        <label>
+        <label class="flex items-center gap-2">
           <input v-model="settings.muted" type="checkbox" >
           Mute
         </label>
-        <label class="range">
+        <label class="flex items-center gap-2 justify-between">
           Volume
           <input v-model.number="settings.volume" type="range" min="0" max="1" step="0.05" >
         </label>
-        <label class="range">
+        <label class="flex items-center gap-2 justify-between">
           Quality
           <select v-model="settings.quality">
             <option value="auto">auto</option>
@@ -71,10 +90,10 @@
             <option value="minimal">minimal</option>
           </select>
         </label>
-        <p class="hint">
+        <p class="c-$muted leading-[1.7] text-micro m-0 mt-1">
           ← → move · ↓ soft drop · space hard drop · Z/X rotate · A flip · C hold · P pause · R restart
         </p>
-        <button @click="showSettings = false">CLOSE</button>
+        <game-button @click="showSettings = false">CLOSE</game-button>
       </aside>
     </transition>
 
@@ -83,18 +102,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
-import { createGameSession, GameSessionKey } from '~/composables/useGameSession'
-import { attachTouchControls } from '~/composables/useInput'
-import { useSettings } from '~/stores/settings'
 import GameHud from '~/components/hud/GameHud.vue'
+import GameButton from '~/components/hud/GameButton.vue'
 
 // GameCanvas and DebugTweakPanel are deliberately NOT imported here: they are
 // `.client.vue` files, and Nuxt only wraps them as client-only components when
 // they come from auto-import. A direct import returns the bare component and
 // silently defeats the suffix.
 
-useHead({ title: 'NEON WELL — play' })
+useHead({ title: 'SQUISHY WELL — play' })
 
 const settings = useSettings()
 settings.load()
@@ -118,6 +134,14 @@ const backendLabel = computed(() => {
   const b = session.quality.backend.value
   return b === 'unknown' ? 'starting…' : b.toUpperCase()
 })
+
+/** One row shape, four rows - see docs/design-system.md's Tier 3a. */
+const gameOverStats = computed(() => [
+  { label: 'SCORE', value: session.hud.score.toLocaleString('en-US') },
+  { label: 'LINES', value: session.hud.lines },
+  { label: 'LEVEL', value: session.hud.level },
+  { label: 'BEST', value: settings.best.toLocaleString('en-US') },
+])
 
 onMounted(() => {
   session.audio.setVolume(settings.muted ? 0 : settings.volume)
@@ -165,6 +189,13 @@ watch(
 watch(
   () => settings.forceReducedMotion,
   (on) => {
+    // Drives the same effect the OS `prefers-reduced-motion` media query
+    // gets in app.css, for people who found this checkbox instead - without
+    // this the checkbox only ever reached the 3D quality tier and left every
+    // CSS transition (GameButton's hover, the fade-* shortcuts) unaffected.
+    // Reachability is scoped to what this checkbox already has today: it
+    // only exists on this page, so this is the only place that sets it.
+    document.documentElement.classList.toggle('reduce-motion', on)
     if (on) session.quality.reducedMotion.value = true
   },
   { immediate: true },
@@ -176,49 +207,3 @@ onBeforeUnmount(() => {
   settings.persist()
 })
 </script>
-
-<style scoped>
-.play { position: relative; width: 100vw; height: 100dvh; overflow: hidden; }
-.boot { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 0.8rem; letter-spacing: 0.2em; }
-.topbar {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem;
-  font-size: 0.68rem;
-  letter-spacing: 0.2em;
-}
-.link { color: var(--muted); text-decoration: none; border: none; padding: 0.2rem 0.4rem; }
-.link:hover { color: var(--accent); background: none; }
-.badge { color: var(--accent); opacity: 0.75; }
-.overlay {
-  position: absolute; inset: 0;
-  display: grid; place-items: center;
-  background: rgba(5, 7, 13, 0.72);
-  backdrop-filter: blur(6px);
-}
-.card { display: flex; flex-direction: column; gap: 0.6rem; min-width: 15rem; text-align: center; padding: 1.5rem; }
-.card h2 { margin: 0 0 0.5rem; letter-spacing: 0.3em; font-size: 0.9rem; color: var(--accent); }
-.card dl { display: grid; grid-template-columns: 1fr auto; gap: 0.2rem 1rem; margin: 0 0 0.75rem; font-size: 0.78rem; }
-.card dt { color: var(--muted); text-align: left; }
-.card dd { margin: 0; font-variant-numeric: tabular-nums; }
-.btnlink {
-  text-decoration: none; text-align: center;
-  border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.9rem;
-  color: var(--muted); font-size: 0.8rem;
-}
-.settings {
-  position: absolute; top: 3rem; right: 1rem;
-  display: flex; flex-direction: column; gap: 0.6rem;
-  width: 17rem; font-size: 0.75rem;
-}
-.settings h2 { margin: 0; font-size: 0.7rem; letter-spacing: 0.2em; color: var(--muted); }
-.settings label { display: flex; align-items: center; gap: 0.5rem; }
-.settings .range { justify-content: space-between; }
-.hint { color: var(--muted); line-height: 1.7; font-size: 0.65rem; margin: 0.25rem 0 0; }
-.fade-enter-active, .fade-leave-active { transition: opacity 140ms ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-</style>

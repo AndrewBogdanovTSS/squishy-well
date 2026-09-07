@@ -3,11 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { inject, onBeforeUnmount, shallowRef, watch } from 'vue'
 import * as THREE from 'three/webgpu'
-import { useLoop, useTresContext } from '@tresjs/core'
-import { GameSessionKey } from '~/composables/useGameSession'
-import { createShatterVFX, type ShatterVFX } from '~/composables/useShatterVFX'
 
 const session = inject(GameSessionKey)!
 const { renderer } = useTresContext()

@@ -3,12 +3,9 @@
 </template>
 
 <script setup lang="ts">
-import { inject, onBeforeUnmount } from 'vue'
 import * as THREE from 'three/webgpu'
 import { instancedBufferAttribute } from 'three/tsl'
-import { useLoop } from '@tresjs/core'
 import { cellsOf, collides } from '@tetris/core'
-import { GameSessionKey } from '~/composables/useGameSession'
 import { PALETTE, PALETTE_ACCESSIBLE } from '~/config/palette'
 import { liveFeel } from '~/config/feel'
 import { asFloat, asVec3 } from '~/lib/tsl'

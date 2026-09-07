@@ -1,6 +1,3 @@
-import { defineStore } from 'pinia'
-import { DEFAULT_BINDINGS, type Binding } from '~/composables/useInput'
-
 export interface HighScore {
   score: number
   lines: number
@@ -21,7 +18,7 @@ interface State {
   scores: HighScore[]
 }
 
-const STORAGE_KEY = 'neonwell:settings:v1'
+const STORAGE_KEY = 'squishywell:settings:v1'
 
 /** Ordinary application state — this is what Pinia is actually good at. */
 export const useSettings = defineStore('settings', {

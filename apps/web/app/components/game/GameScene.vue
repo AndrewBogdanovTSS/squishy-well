@@ -1,6 +1,5 @@
 <template>
   <primitive :object="rig" />
-
   <well />
   <board-blocks :accessible />
   <active-piece :accessible />
@@ -9,11 +8,8 @@
 </template>
 
 <script setup lang="ts">
-import { inject, onBeforeUnmount, onMounted, watch } from 'vue'
 import * as THREE from 'three/webgpu'
-import { useLoop, useTresContext } from '@tresjs/core'
 import { COLS } from '@tetris/core'
-import { GameSessionKey } from '~/composables/useGameSession'
 import { liveFeel } from '~/config/feel'
 import { CEILING_Y, FLOOR_Y, fitCamera } from '~/lib/three'
 import Well from './Well.vue'
@@ -55,22 +51,25 @@ const monitor = new THREE.DirectionalLight('#dbeafe', 5.4)
 monitor.position.set(0, MONITOR_Y, 0.35)
 monitor.target.position.set(0, FLOOR_Y, 0)
 monitor.castShadow = true
-monitor.shadow.mapSize.set(2048, 2048)
-monitor.shadow.camera.near = 0.5
-monitor.shadow.camera.far = MONITOR_Y - FLOOR_Y + 2
-monitor.shadow.camera.left = -(COLS / 2 + 1)
-monitor.shadow.camera.right = COLS / 2 + 1
-monitor.shadow.camera.top = 3.5
-monitor.shadow.camera.bottom = -3.5
+const monitorShadow = monitor.shadow
+monitorShadow.mapSize.set(2048, 2048)
+Object.assign(monitorShadow.camera, {
+  near: 0.5,
+  far: MONITOR_Y - FLOOR_Y + 2,
+  left: -(COLS / 2 + 1),
+  right: COLS / 2 + 1,
+  top: 3.5,
+  bottom: -3.5,
+})
 // normalBias, not a negative depth bias: this renderer can run reversed-Z, and
 // a negative bias there pushes the comparison the wrong way - which shows up as
 // an inverted shadow, lit exactly where it should be dark
-monitor.shadow.bias = 0
-monitor.shadow.normalBias = 0.02
-monitor.shadow.blurSamples = 8
+monitorShadow.bias = 0
+monitorShadow.normalBias = 0.02
+monitorShadow.blurSamples = 8
 // three never recomputes this for you: every bound set above is inert until the
 // projection matrix is rebuilt, and the camera quietly keeps its default +-5 box
-monitor.shadow.camera.updateProjectionMatrix()
+monitorShadow.camera.updateProjectionMatrix()
 
 // Deliberately low. Fill light is the enemy here: every unit of it lands
 // inside the shadow as well as outside it, and the contrast between those two

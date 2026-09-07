@@ -1,5 +1,3 @@
-import { computed, ref, onScopeDispose } from 'vue'
-
 export type QualityTier = 'high' | 'medium' | 'low' | 'minimal'
 export type Backend = 'webgpu' | 'webgl' | 'unknown'
 

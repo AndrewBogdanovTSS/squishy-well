@@ -6,5 +6,7 @@ coding agent - keep changes there, not here.
 
 What the repository is, and how to run it: [README.md](./README.md).
 What the checkers are, and why: [docs/evidence-layer.md](./docs/evidence-layer.md).
+Where a style value goes (theme token, global shortcut, or component-local):
+[docs/design-system.md](./docs/design-system.md).
 
 Skills: [`.agents/skills/`](./.agents/skills/).

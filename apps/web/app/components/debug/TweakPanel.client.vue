@@ -1,5 +1,5 @@
 <template>
-  <div ref="container" class="tweak" />
+  <div ref="container" class="fixed bottom-2 left-2 w-60 z-40 opacity-90" />
 </template>
 
 <script setup lang="ts">
@@ -54,14 +54,3 @@ onMounted(async () => {
 
 onBeforeUnmount(() => pane?.dispose())
 </script>
-
-<style scoped>
-.tweak {
-  position: fixed;
-  bottom: 0.5rem;
-  left: 0.5rem;
-  width: 15rem;
-  z-index: 40;
-  opacity: 0.9;
-}
-</style>

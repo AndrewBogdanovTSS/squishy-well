@@ -3,8 +3,6 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount } from 'vue'
-import { useLoop } from '@tresjs/core'
 import * as THREE from 'three/webgpu'
 import { RectAreaLightNode } from 'three/webgpu'
 import { RectAreaLightTexturesLib } from 'three/addons/lights/RectAreaLightTexturesLib.js'

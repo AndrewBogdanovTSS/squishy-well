@@ -1,5 +1,4 @@
 import { liveFeel } from '~/config/feel'
-import type { EventBus } from './useEventBus'
 
 /**
  * Procedural Web Audio SFX — no asset files, no <audio> latency.

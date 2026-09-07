@@ -1,21 +1,19 @@
 <template>
-  <TresCanvas
+  <tres-canvas
     :renderer="createRenderer"
     :dpr="[1, 2]"
     window-size
     shadows
     clear-color="#05070d"
-    class="game-canvas"
+    class="block"
   >
     <game-scene :accessible />
-  </TresCanvas>
+  </tres-canvas>
 </template>
 
 <script setup lang="ts">
-import { TresCanvas } from '@tresjs/core'
 import type { TresRendererSetupContext } from '@tresjs/core'
 import { WebGPURenderer } from 'three/webgpu'
-import { toValue } from 'vue'
 import GameScene from './GameScene.vue'
 
 defineProps<{ accessible?: boolean }>()
@@ -40,7 +38,3 @@ function createRenderer(ctx: TresRendererSetupContext) {
   })
 }
 </script>
-
-<style scoped>
-.game-canvas { display: block; }
-</style>

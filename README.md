@@ -1,4 +1,4 @@
-# NEON WELL — tetris on Nuxt 4 + TresJS v5 + WebGPU/TSL
+# SQUISHY WELL — tetris on Nuxt 4 + TresJS v5 + WebGPU/TSL
 
 A guideline tetris: SRS with wall kicks, lock delay with a reset cap, 7-bag with a
 seeded RNG, DAS/ARR owned by the simulation, replays — rendered through a WebGPU
@@ -106,6 +106,19 @@ The boundary is enforced by `eslint.config.js`, not by convention: importing
 The HUD is DOM on top of the canvas, not 3D text: cheaper, selectable, and it
 reaches a screen reader (`aria-live` on score, `role="status"` on level).
 
+### Styling
+
+UnoCSS (`presetWind3`, config in `uno.config.ts`), utility classes only — no
+scoped `<style>` blocks anywhere in `apps/web`. Colours are reached with Uno's
+`$name` shorthand (`b-$border`, `bg-$panel`) straight into the custom
+properties `app.css` already defines, so there is exactly one place a colour
+is named, not a `theme.colors` table duplicating it. Interactive chrome
+(`GameButton.vue`) is a real component rather than a global `button {}` rule:
+Tailwind's preflight reset (`nuxt.config.ts`'s `unocss.preflight`) resets bare
+element selectors at the same specificity it would take to style them, so a
+global rule and the reset silently race on load order. A class on a component
+always wins regardless of that order.
+
 ## Rendering notes
 
 - `TresCanvas` takes a **synchronous** renderer factory. TresJS calls
@@ -123,6 +136,29 @@ reaches a screen reader (`aria-live` on score, `role="status"` on level).
 - The stack is one `InstancedMesh` resynced on `boardVersion`, never per frame.
   Scratch `Matrix4`/`Vector3` objects live at module scope.
 - Screen shake is a camera offset, not a post effect.
+- **Block material** (`blockMaterial()` in `lib/three.ts`) is glass/jelly, not a
+  flat cube: cheap subsurface scattering lets light that entered the far side
+  of a block transmit through, so the neon tubes light blocks dynamically from
+  behind rather than the material just reflecting an ambient colour.
+- **Neon tube lighting**: the same `NEON_TUBES` definitions in `lib/three.ts`
+  drive both the visible fixtures and the real lights, so they can't disagree.
+  Their colour is a "slowly walking" animated gradient rather than a static
+  wash, and the wall pair's gradient runs edge-to-edge. The top tube is a
+  directional "monitor" light kept deliberately out of view — no visible
+  fixture, only the wash it throws down the well — and the ghost piece is
+  kept alongside it rather than replaced, since the shadow alone read as too
+  subtle a landing cue on its own.
+- **Contact-squash timing** (`ActivePiece.vue`): the wobble on landing keys
+  off the frame the *rendered* piece reaches its resting depth
+  (`CONTACT_EPSILON`), not the engine's `LOCK` event. The engine holds a
+  grounded piece for the full lock-delay window (up to ~466 ms) before `LOCK`
+  fires, so hanging the animation on that event reads as a stuck delay before
+  the wobble kicks in. Hard drops squash on `LOCK` instead, in `BoardBlocks.vue`
+  — a hard drop locks in the same call that moves the piece, so it never
+  renders in a grounded-but-not-locked state for the contact check to catch.
+- Line-clear debris (`useShatterVFX.ts`) is weighted to fall rather than
+  scatter outward and up — the blocks read as liquid containers, so a clear
+  should look like spilled liquid, not shattered debris.
 
 ### Particles
 

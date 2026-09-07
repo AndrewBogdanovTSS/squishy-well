@@ -34,7 +34,7 @@ Runs every check in this repository, then verifies that something actually runs 
 
   --enforce     exit 1 when any finding is an error (default: warn only)
   --fast        skip the slow checks (the test suite, the build measurement)
-  --only        run one check: docs, fingerprint, reachability, exceptions
+  --only        run one check: docs, styles, fingerprint, reachability, exceptions
   --decisions   directory of decision records (default docs/decisions)
   --no-json     suppress the machine-readable report block
 
@@ -69,6 +69,7 @@ function main(): void {
   if (!only || only === 'docs') {
     findings.push(...runCheck('README claims', 'pnpm check:docs' + (fast ? ' --skip test,build' : ''), repo))
   }
+  if (!only || only === 'styles') findings.push(...runCheck('design-system tokens', 'pnpm check:styles', repo))
   if (!only || only === 'reachability') findings.push(...checkReachability(repo, decisions))
   if (!only || only === 'exceptions') findings.push(...checkExceptions(repo))
 

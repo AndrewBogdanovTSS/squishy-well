@@ -43,3 +43,22 @@ export const GLYPHS: Record<PieceType, string> = {
 export const GHOST_COLOR = '#94a3b8'
 export const WELL_COLOR = '#05070c'
 export const GRID_COLOR = '#334155'
+
+/** Mirrors app.css's `--text` - the one DOM colour Board2D's canvas also needs. A `<canvas>` 2D context cannot read a CSS custom property, so this is the closest thing to one source that boundary allows: change both together. */
+export const TEXT_COLOR = '#e2e8f0'
+
+/**
+ * `ctx.fillStyle`/`strokeStyle` take a CSS colour string, not a custom
+ * property, so a canvas that wants an alpha variant of one of the hex
+ * constants above can't reach for `rgb(var(--x-rgb)/N%)` the way a Uno class
+ * can (see app.css). This keeps the hex the single source anyway - convert
+ * at the call site instead of hand-typing a second `rgba(...)` spelling of
+ * the same colour that can drift from it.
+ */
+export function withAlpha(hex: string, alpha: number): string {
+  const n = Number.parseInt(hex.slice(1), 16)
+  const r = (n >> 16) & 255
+  const g = (n >> 8) & 255
+  const b = n & 255
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}

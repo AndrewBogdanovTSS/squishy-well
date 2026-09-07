@@ -1,12 +1,10 @@
 <template>
-  <canvas ref="canvas" class="board2d" aria-hidden="true" />
+  <canvas ref="canvas" class="board2d block b b-$border rounded-md [image-rendering:pixelated]" aria-hidden="true" />
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, inject } from 'vue'
 import { COLS, VISIBLE_ROWS, codeToType, idx } from '@tetris/core'
-import { GameSessionKey } from '~/composables/useGameSession'
-import { GHOST_COLOR, PALETTE } from '~/config/palette'
+import { GHOST_COLOR, GRID_COLOR, PALETTE, TEXT_COLOR, WELL_COLOR, withAlpha } from '~/config/palette'
 
 /**
  * The 2D debug renderer. It draws exactly the same state the 3D scene does,
@@ -38,11 +36,15 @@ function draw(): void {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   ctx.clearRect(0, 0, w, h)
 
-  ctx.fillStyle = '#080c16'
+  ctx.fillStyle = WELL_COLOR
   ctx.fillRect(0, 0, w, h)
 
   if (showGrid) {
-    ctx.strokeStyle = 'rgba(148,163,184,0.10)'
+    // Same hex and the same opacity Well.vue's 3D grid material uses -
+    // this canvas is the reference renderer, comparing it against the 3D
+    // scene by eye is the whole point, so its chrome sources the same
+    // constants the 3D scene does rather than its own approximation.
+    ctx.strokeStyle = withAlpha(GRID_COLOR, 0.22)
     ctx.lineWidth = 1
     for (let x = 1; x < COLS; x++) {
       ctx.beginPath()
@@ -100,9 +102,9 @@ function draw(): void {
   }
 
   if (session.paused.value || session.gameOver.value) {
-    ctx.fillStyle = 'rgba(5,7,13,0.72)'
+    ctx.fillStyle = withAlpha(WELL_COLOR, 0.72)
     ctx.fillRect(0, 0, w, h)
-    ctx.fillStyle = '#e2e8f0'
+    ctx.fillStyle = TEXT_COLOR
     ctx.font = '600 20px ui-monospace, monospace'
     ctx.textAlign = 'center'
     ctx.fillText(session.gameOver.value ? 'GAME OVER' : 'PAUSED', w / 2, h / 2)
@@ -114,12 +116,3 @@ onMounted(() => {
 })
 onBeforeUnmount(() => cancelAnimationFrame(raf))
 </script>
-
-<style scoped>
-.board2d {
-  display: block;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  image-rendering: pixelated;
-}
-</style>
