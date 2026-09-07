@@ -28,5 +28,5 @@ const { to, size = 'md', variant = 'solid' } = defineProps<{
   variant?: 'solid' | 'quiet'
 }>()
 
-const sizeClass = computed(() => (size === 'sm' ? 'text-label tracking-wide' : ''))
+const sizeClass = computed(() => (size === 'sm' ? 'text-sm tracking-wide' : ''))
 </script>

@@ -1,7 +1,7 @@
 <template>
   <main class="h-dvh f-col gap-3 p-4">
     <header class="flex justify-between items-center">
-      <h1 class="m-0 text-body tracking-title c-$muted font-semibold">DEBUG · 2D REFERENCE</h1>
+      <h1 class="m-0 text-md tracking-title c-$muted font-semibold">DEBUG · 2D REFERENCE</h1>
       <nav class="flex gap-4 text-xs tracking-caps">
         <nuxt-link to="/play" class="c-$accent">3D</nuxt-link>
         <nuxt-link to="/" class="c-$accent">MENU</nuxt-link>
@@ -11,7 +11,7 @@
     <div class="flex-1 flex gap-5 items-start relative overflow-auto">
       <board2-d :cell="26" />
 
-      <aside class="panel panel-pad min-w-64 f-col gap-2">
+      <aside class="panel px-3.6 py-3 min-w-64 f-col gap-2">
         <div class="flex gap-2">
           <game-button class="flex-1" size="sm" @click="session.togglePause()">
             {{ session.paused.value ? 'RESUME' : 'PAUSE' }}
@@ -46,20 +46,22 @@
           </game-button>
         </div>
 
-        <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.4 m-0 mt-2 text-label">
+        <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.4 m-0 mt-2 text-sm">
           <template v-for="s in debugStats" :key="s.label">
             <dt class="c-$muted">{{ s.label }}</dt>
             <dd class="m-0 text-right tabular-nums">{{ s.value }}</dd>
           </template>
         </dl>
 
-        <pre v-if="showState" class="text-micro leading-[1.15] c-$muted m-0 mt-2">{{ rows.join('\n') }}</pre>
+        <pre v-if="showState" class="text-xs leading-[1.15] c-$muted m-0 mt-2">
+          {{ rows.join('\n') }}
+        </pre>
       </aside>
 
       <div class="relative flex-1 min-h-80"><game-hud /></div>
     </div>
 
-    <footer class="text-label c-$muted tracking-wide">
+    <footer class="text-sm c-$muted tracking-wide">
       ← → move · ↓ soft · space hard · Z/X rotate · A flip · C hold · P pause · R restart
     </footer>
   </main>

@@ -3,7 +3,7 @@
     <client-only>
       <game-canvas :accessible="settings.accessiblePalette" />
       <template #fallback>
-        <div class="absolute inset-0 grid place-items-center c-$muted text-body tracking-caps">
+        <div class="absolute inset-0 grid place-items-center c-$muted text-md tracking-caps">
           initialising renderer…
         </div>
       </template>
@@ -12,7 +12,7 @@
     <game-hud />
 
     <div
-      class="absolute top-0 left-0 right-0 flex justify-center items-center gap-4 p-3 text-label tracking-caps"
+      class="absolute top-0 left-0 right-0 flex justify-center items-center gap-4 p-3 text-sm tracking-caps"
     >
       <nuxt-link to="/" class="c-$muted no-underline b-none py-0.8 px-1.6 hover:c-$accent">
         ← MENU
@@ -34,7 +34,7 @@
         class="absolute inset-0 grid place-items-center bg-[rgb(var(--bg-rgb)/72%)] [backdrop-filter:blur(6px)]"
       >
         <div class="panel p-6 f-col gap-2.4 min-w-60 text-center">
-          <h2 class="m-0 mb-2 tracking-title text-lead c-$accent">PAUSED</h2>
+          <h2 class="m-0 mb-2 tracking-title text-lg c-$accent">PAUSED</h2>
           <game-button @click="session.togglePause(false)">RESUME</game-button>
           <game-button @click="session.restart()">RESTART</game-button>
           <game-button to="/" variant="quiet">QUIT</game-button>
@@ -48,8 +48,8 @@
         class="absolute inset-0 grid place-items-center bg-[rgb(var(--bg-rgb)/72%)] [backdrop-filter:blur(6px)]"
       >
         <div class="panel p-6 f-col gap-2.4 min-w-60 text-center">
-          <h2 class="m-0 mb-2 tracking-title text-lead c-$accent">GAME OVER</h2>
-          <dl class="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.8 m-0 mb-3 text-body">
+          <h2 class="m-0 mb-2 tracking-title text-lg c-$accent">GAME OVER</h2>
+          <dl class="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.8 m-0 mb-3 text-md">
             <template v-for="s in gameOverStats" :key="s.label">
               <dt class="c-$muted text-left">{{ s.label }}</dt>
               <dd class="m-0 tabular-nums">{{ s.value }}</dd>
@@ -62,8 +62,8 @@
     </transition>
 
     <transition name="fade">
-      <aside v-if="showSettings" class="panel panel-pad absolute top-12 right-4 f-col gap-2.4 w-68 text-xs">
-        <h2 class="m-0 text-label tracking-caps c-$muted">SETTINGS</h2>
+      <aside v-if="showSettings" class="panel px-3.6 py-3 absolute top-12 right-4 f-col gap-2.4 w-68 text-xs">
+        <h2 class="m-0 text-sm tracking-caps c-$muted">SETTINGS</h2>
         <label class="flex items-center gap-2">
           <input v-model="settings.accessiblePalette" type="checkbox" >
           High-contrast palette
@@ -90,7 +90,7 @@
             <option value="minimal">minimal</option>
           </select>
         </label>
-        <p class="c-$muted leading-[1.7] text-micro m-0 mt-1">
+        <p class="c-$muted leading-[1.7] text-xs m-0 mt-1">
           ← → move · ↓ soft drop · space hard drop · Z/X rotate · A flip · C hold · P pause · R restart
         </p>
         <game-button @click="showSettings = false">CLOSE</game-button>

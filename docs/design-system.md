@@ -12,22 +12,30 @@ Font sizes and letter-spacing are a scale, not a pile of independent numbers -
 `text-[0.68rem]` next to `text-[0.7rem]` next to `text-[0.72rem]` is the same
 design decision typed three slightly different ways. `theme.fontSize` and
 `theme.letterSpacing` in `uno.config.ts` name the scale once; every class
-reaches it by name (`text-label`, `tracking-wide`), same as reaching for a
-built-in like `text-sm`.
+reaches it by name (`text-sm`, `tracking-wide`).
+
+`fontSize`'s names are Tailwind's own scale (`xs`/`sm`/`md`/`lg`/`xl`), not a
+project-specific vocabulary - this project's values simply replace wind3's
+defaults for those five, so a class like `text-sm` means this project's
+0.7rem everywhere, not whatever Tailwind shipped. `letterSpacing` already
+worked this way (`tight`/`wide`/`wider` are Tailwind names too); `fontSize`
+was renamed to match. See the comment above `theme.fontSize` in
+`uno.config.ts` for the one-time fallout: two call sites used the bare
+`text-xs` built-in before this rename and picked up the new 0.65rem after it.
 
 Current scale:
 
 | fontSize | value | typical use |
 |---|---|---|
-| `micro` | 0.65rem | badges, dl labels, fine print |
-| `label` | 0.7rem | section headings, nav, button labels |
-| `body` | 0.8rem | buttons, secondary paragraphs |
-| `lead` | 0.9rem | modal headings, intro text |
-| `stat` | 1.15rem | score/level/lines readouts |
+| `xs` | 0.65rem | badges, dl labels, fine print |
+| `sm` | 0.7rem | section headings, nav, button labels |
+| `md` | 0.8rem | buttons, secondary paragraphs |
+| `lg` | 0.9rem | modal headings, intro text |
+| `xl` | 1.15rem | score/level/lines readouts |
 | `display` | clamp(3rem,12vw,6rem) | the one hero heading |
 
-(`text-base` = 1rem is wind3's own built-in - reach for that directly rather
-than adding a token that duplicates it.)
+(`text-base` = 1rem is wind3's own built-in, untouched by the above - reach
+for that directly rather than adding a token that duplicates it.)
 
 | letterSpacing | value |
 |---|---|
@@ -86,7 +94,6 @@ The full list, and why each one is here:
 |---|---|
 | `f-col` | used everywhere a column flex is needed; no narrower home makes sense |
 | `panel` | the frosted-card chrome, reused by the HUD, the debug sidebar and modal cards |
-| `panel-pad` | `panel`'s default content padding, split out so a modal card can override it with a plain `p-6` instead of re-declaring four of `panel`'s five properties by hand to change one |
 | `fade-enter-active` / `fade-leave-active` / `fade-enter-from` / `fade-leave-to` | Vue's `<transition name="fade">` contract - the classes are never written in a template, Vue applies them itself, so a shortcut is the only place their declaration can live |
 
 That's the whole list, on purpose. If you're reaching for a new one, run the

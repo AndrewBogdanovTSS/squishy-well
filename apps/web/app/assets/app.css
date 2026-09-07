@@ -16,6 +16,28 @@
  */
 :root {
   color-scheme: dark;
+  /**
+   * Every `b`/`border-*` utility only ever sets border-width; the colour
+   * comes from wind3's own preflight rule (`*,::before,::after{border-color:
+   * var(--un-default-border-color,#e5e7eb)}` - a port of Tailwind v3's own
+   * "default border colour" preflight). Left at its own default, a bare `b`
+   * with no explicit colour class renders a light-gray (#e5e7eb) border,
+   * which was never actually reached for anywhere in this app - every current
+   * `b` already pairs with its own `b-$color`/`b-current`. Pointing the
+   * fallback at `currentColor` instead is what plain CSS does anyway
+   * (border-color's own initial value is `currentcolor`; Tailwind's preflight
+   * is what overrides it to gray) - so `b` alone now means "border, current
+   * text colour" the way it would with no framework opinion in the way, and
+   * `b b-current` (the two combo/b2b badges in GameHud.vue) collapses to `b`.
+   *
+   * The one thing this trades away: forgetting a colour class used to render
+   * a jarring light-gray border against this dark palette - loud, easy to
+   * spot. Now it silently inherits whatever text colour is ambient, which can
+   * look plausible even when it was not the intended colour. Worth it for a
+   * codebase this size where nothing currently relies on the loud failure -
+   * revisit if a bordered element with no *intended* colour ever shows up.
+   */
+  --un-default-border-color: currentColor;
   --bg-rgb: 5 7 12;
   --bg: rgb(var(--bg-rgb));
   --bg-soft: #0b1020;

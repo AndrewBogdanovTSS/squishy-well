@@ -1,5 +1,14 @@
 <template>
-  <tres-canvas
+  <!--
+    PascalCase, not this project's usual kebab-case tag - confirmed by testing
+    both. `TresCanvas` is a dual .client/.server "island" component that
+    @tresjs/nuxt registers globally; the kebab form silently fails to resolve
+    to it (no console error - children just never mount inside a real Tres
+    context, so useTresContext() throws "must be used together with
+    useTresContextProvider"). Every other component here uses kebab-case
+    safely; this one specifically does not.
+  -->
+  <TresCanvas
     :renderer="createRenderer"
     :dpr="[1, 2]"
     window-size
@@ -8,13 +17,13 @@
     class="block"
   >
     <game-scene :accessible />
-  </tres-canvas>
+  </TresCanvas>
 </template>
 
 <script setup lang="ts">
+import { TresCanvas } from '@tresjs/core'
 import type { TresRendererSetupContext } from '@tresjs/core'
 import { WebGPURenderer } from 'three/webgpu'
-import GameScene from './GameScene.vue'
 
 defineProps<{ accessible?: boolean }>()
 

@@ -8,12 +8,12 @@
     }"
   >
     <span
-      v-for="(c, i) in layout.cells"
+      v-for="({x, y}, i) in layout.cells"
       :key="i"
       class="absolute rounded-0.75 shadow-[0_0_8px_currentColor]"
       :style="{
-        left: `${c.x * size}px`,
-        top: `${c.y * size}px`,
+        left: `${x * size}px`,
+        top: `${y * size}px`,
         width: `${size - 2}px`,
         height: `${size - 2}px`,
         background: piece ? PALETTE[piece] : 'transparent',

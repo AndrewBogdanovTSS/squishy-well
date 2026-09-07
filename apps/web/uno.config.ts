@@ -16,6 +16,17 @@ import { defineConfig, presetWind3, transformerVariantGroup } from 'unocss'
  * somewhere, and this is that. See docs/design-system.md for the full tier
  * rule this project uses to decide "token, global shortcut, or
  * component-local", which is also what `pnpm check:styles` enforces.
+ *
+ * `fontSize`'s keys are Tailwind's own scale names (xs/sm/md/lg/xl), not a
+ * bespoke vocabulary - deliberately, so this project's values simply replace
+ * wind3's defaults for those five names rather than living alongside them
+ * under different words. The trade-off: `text-xs` no longer means "whatever
+ * Tailwind ships", it means this project's 0.65rem, everywhere - two call
+ * sites (play.vue's settings aside, debug.vue's nav) used the built-in
+ * 0.75rem before this rename and silently picked up 0.65rem after it. Not a
+ * bug: it is what overriding the scale means, and it is the same thing that
+ * already happened to `letterSpacing`'s `tight`/`wide`/`wider` (Tailwind
+ * defaults too) when that scale was first named.
  */
 export default defineConfig({
   presets: [presetWind3()],
@@ -28,22 +39,12 @@ export default defineConfig({
   transformers: [transformerVariantGroup()],
 
   theme: {
-    /**
-     * Six steps, each used by more than one component before it was named -
-     * see docs/design-system.md for the full mapping from the old arbitrary
-     * values to these. `display` is the one exception (used once, in
-     * index.vue's hero) and is named anyway: "the one clamp() the whole page
-     * has" is worth being able to find by grep, and a bare `text-[clamp(...)]`
-     * in a template gives no hint that it's deliberate rather than a value
-     * nobody got around to designing yet. `text-base` (1rem, wind3's own
-     * built-in) is used directly where it applies rather than duplicated here.
-     */
     fontSize: {
-      micro: '0.65rem',
-      label: '0.7rem',
-      body: '0.8rem',
-      lead: '0.9rem',
-      stat: '1.15rem',
+      xs: '0.65rem',
+      sm: '0.7rem',
+      md: '0.8rem',
+      lg: '0.9rem',
+      xl: '1.15rem',
       display: 'clamp(3rem, 12vw, 6rem)',
     },
     letterSpacing: {
@@ -58,18 +59,7 @@ export default defineConfig({
 
   shortcuts: {
     'f-col': 'flex flex-col',
-    /**
-     * `.panel` is reused across several component templates - a shortcut
-     * keeps the class name as one stable name while the declaration behind
-     * it is still pure Uno, not hand-written CSS. Padding lives in the
-     * separate `panel-pad` shortcut below, not here: a modal card wants the
-     * same chrome but its own padding, and splitting the two means it reaches
-     * for `panel p-6` instead of re-declaring four of these five properties
-     * by hand just to change the fifth.
-     */
     panel: 'bg-$panel b b-$border rounded-xl [backdrop-filter:blur(8px)]',
-    'panel-pad': 'px-3.6 py-3',
-
     /**
      * Vue's <transition name="fade"> contract fixes these four class names -
      * it applies them itself, so they can never be written inline on an
