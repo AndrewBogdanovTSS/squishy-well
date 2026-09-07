@@ -99,9 +99,15 @@ watch(() => accessible, syncBoard)
 
 const offLock = session.bus.on('LOCK', (e) => {
   if (session.quality.reducedMotion.value) return
+  // Hard drops only. A soft landing already squashed on the active piece at the
+  // moment it touched down; repeating it here would fire a second wobble when
+  // the lock delay finally expires, which is the delay this was meant to fix.
+  // A hard drop locks in the same call that moves the piece, so the piece never
+  // renders grounded and the stack is the only thing that can carry the impact.
+  if (!e.hard) return
   squashCells = e.cells.map((c) => ({ x: c.x, y: c.y }))
   squashStart = performance.now()
-  squashAmount = liveFeel.piece.squashOnLand * (e.hard ? Math.min(1, e.dropDistance / 16) : 0.35)
+  squashAmount = liveFeel.piece.squashOnLand * Math.min(1, e.dropDistance / 16)
 })
 
 function applySquash(now: number): boolean {

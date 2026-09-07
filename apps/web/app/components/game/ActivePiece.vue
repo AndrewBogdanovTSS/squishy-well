@@ -7,12 +7,12 @@ import { inject, onBeforeUnmount } from 'vue'
 import * as THREE from 'three/webgpu'
 import { instancedBufferAttribute } from 'three/tsl'
 import { useLoop } from '@tresjs/core'
-import { cellsOf } from '@tetris/core'
+import { cellsOf, collides } from '@tetris/core'
 import { GameSessionKey } from '~/composables/useGameSession'
 import { PALETTE, PALETTE_ACCESSIBLE } from '~/config/palette'
 import { liveFeel } from '~/config/feel'
 import { asFloat, asVec3 } from '~/lib/tsl'
-import { blockGeometry, blockMaterial, worldX, worldY } from '~/lib/three'
+import { blockGeometry, blockMaterial, clamp01, easeOutBack, worldX, worldY } from '~/lib/three'
 
 const { accessible = false } = defineProps<{ accessible?: boolean }>()
 const session = inject(GameSessionKey)!
@@ -53,6 +53,26 @@ let primed = false
 let nudgeX = 0
 let nudgeY = 0
 
+/**
+ * Squash on contact, not on lock.
+ *
+ * The LOCK event is the obvious hook and it is the wrong one: the engine holds
+ * a grounded piece for the whole lock delay before it locks, so hanging the
+ * impact off LOCK plays the wobble half a second after the piece visibly
+ * touches down. Lock delay is a rules mechanic and stays exactly as it is -
+ * this is a view concern, so the view decides for itself when contact happened.
+ *
+ * Two conditions, both needed. Grounded is the logical test: nothing below, so
+ * the piece cannot fall further. Settled is the visual one: the rendered
+ * position chases the logical one, so at the instant the engine calls it
+ * grounded the piece can still be a few hundredths above the surface, and
+ * squashing then reads as a wobble in mid-air.
+ */
+const CONTACT_EPSILON = 0.06
+let squashStart = -1
+let squashAmount = 0
+let touching = false
+
 const offRotate = session.bus.on('ROTATE', (e) => {
   if (e.kickIndex === 0 || session.quality.reducedMotion.value) return
   const n = liveFeel.piece.kickNudge * Math.min(2, e.kickIndex)
@@ -83,12 +103,38 @@ onBeforeRender(({ delta }) => {
   nudgeX *= Math.exp(-delta * 14)
   nudgeY *= Math.exp(-delta * 14)
 
+  const grounded = collides(session.board, cellsOf(p.type, p.rot), p.x, p.y - 1)
+  const landed = grounded && Math.abs(renderY - targetY) < CONTACT_EPSILON
+  if (landed && !touching && !session.quality.reducedMotion.value) {
+    squashStart = performance.now()
+    squashAmount = liveFeel.piece.squashOnLand * 0.35
+  }
+  // clears when the piece is nudged off its ledge during lock delay, so landing
+  // again on a lower row wobbles again - which is what actually happened
+  touching = landed
+
+  let sy = 1
+  let sxz = 1
+  if (squashStart >= 0) {
+    const t = (performance.now() - squashStart) / liveFeel.piece.squashRecoverMs
+    if (t >= 1) {
+      squashStart = -1
+    } else {
+      const k = 1 - easeOutBack(clamp01(t))
+      sy = 1 - squashAmount * k
+      sxz = 1 + squashAmount * k * 0.6
+    }
+  }
+  // each cube compresses onto its own base, matching how the stack squashes
+  const sink = (1 - sy) * 0.5
+  _s.set(sxz, sy, sxz)
+
   const colors = accessible ? PALETTE_ACCESSIBLE : PALETTE
   _c.set(colors[p.type])
   const cells = cellsOf(p.type, p.rot)
   for (let i = 0; i < 4; i++) {
     const cell = cells[i]!
-    _v.set(renderX + cell[0] + nudgeX, renderY + cell[1] + nudgeY, 0)
+    _v.set(renderX + cell[0] + nudgeX, renderY + cell[1] + nudgeY - sink, 0)
     mesh.setMatrixAt(i, _m.compose(_v, _q, _s))
     colorArray[i * 3] = _c.r
     colorArray[i * 3 + 1] = _c.g
