@@ -2,7 +2,7 @@
   "name": "tetris-webgpu",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@11.25.0",
+  "packageManager": "pnpm@12.2.1",
   "scripts": {
     "dev": "pnpm --filter @tetris/web dev",
     "build": "pnpm --filter @tetris/web build",
