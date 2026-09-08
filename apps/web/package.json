@@ -20,7 +20,7 @@
     "nuxt": "^4.5.2",
     "pinia": "^4.0.3",
     "three": "0.185.1",
-    "vue": "^3.5.0"
+    "vue": "^3.5.42"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
@@ -29,6 +29,6 @@
     "tweakpane": "^4.0.5",
     "typescript": "^5.9.3",
     "unocss": "66.10.0",
-    "vue-tsc": "^3.3.10"
+    "vue-tsc": "^3.3.11"
   }
 }

@@ -17,10 +17,10 @@
     "fixtures": "tsx scripts/gen-fixtures.ts"
   },
   "devDependencies": {
-    "@types/node": "^22.19.1",
-    "@vitest/coverage-v8": "^4.1.10",
-    "tsx": "^4.20.6",
+    "@types/node": "^26.4.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "tsx": "^4.23.13",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }

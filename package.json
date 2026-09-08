@@ -25,16 +25,12 @@
     "hooks:install": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
-    "@types/node": "^22.19.1",
-    "eslint": "^10.8.0",
+    "@types/node": "^26.4.0",
+    "eslint": "^10.9.1",
     "evidence-layer": "workspace:*",
-    "tsx": "^4.20.6",
+    "tsx": "^4.23.13",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.67.0",
-    "vitest": "^4.1.10"
-  },
-  "volta": {
-    "node": "26.8.1",
-    "pnpm": "11.25.0"
+    "typescript-eslint": "^8.69.0",
+    "vitest": "^4.1.11"
   }
 }
