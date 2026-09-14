@@ -18,11 +18,11 @@ import {
   EXIT,
   checkExceptions,
   checkReachability,
+  emitReport,
   parseArgs,
   recordNewMisses,
   report,
   run,
-  summarise,
   usage,
 } from 'evidence-layer'
 import type { Finding } from 'evidence-layer'
@@ -41,9 +41,6 @@ Runs every check in this repository, then verifies that something actually runs 
 exit 0 = warn-only or clean, 1 = --enforce and at least one error,
 3 = an unescalated flaky finding with no error present, 2 = bad usage
 `
-
-const JSON_BEGIN = '---GOVERNANCE-JSON-BEGIN---'
-const JSON_END = '---GOVERNANCE-JSON-END---'
 
 /** Runs another script in this repo and folds its exit code into one finding, including the flaky exit code. */
 function runCheck(name: string, command: string, repo: string): Finding[] {
@@ -85,17 +82,7 @@ function main(): void {
   report('Governance (' + (enforce ? 'enforcing' : 'warn-only') + ')', findings)
 
   if (args.json !== false && args['no-json'] !== true) {
-    console.log(JSON_BEGIN)
-    console.log(
-      JSON.stringify({
-        schema: 2,
-        mode: enforce ? 'enforce' : 'warn',
-        generatedAt: new Date().toISOString(),
-        summary: summarise(findings),
-        findings: findings.map((f) => ({ level: f.level, claim: f.claim, detail: f.detail, file: f.file })),
-      }),
-    )
-    console.log(JSON_END)
+    emitReport(findings, enforce ? 'enforce' : 'warn')
   }
 
   const failed = findings.some((f) => f.level === 'error')

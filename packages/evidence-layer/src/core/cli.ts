@@ -67,6 +67,22 @@ export interface Finding {
   /** Where the claim lives, when it has a location. */
   file?: string
   line?: number
+  /**
+   * The same two facts as `claim` and `detail`, as values rather than prose.
+   *
+   * `claim`/`detail` are written to be read by a person and are the only thing
+   * the text reporter prints. They are English, so anything downstream that
+   * wants the number has to parse the sentence back apart - and a consumer that
+   * regex-scrapes "measured 4.15 MB" is a claim about the wording, not about
+   * the build. These two fields are for that consumer.
+   *
+   * Both optional on purpose. Plenty of honest findings have no scalar to
+   * report ("no test-count claim found to check"), and inventing one so the
+   * shape looks uniform would mean fabricating an observation - which is the
+   * failure this package exists to make impossible. Absent means absent.
+   */
+  expected?: unknown
+  observed?: unknown
 }
 
 const ICON: Record<Level, string> = {

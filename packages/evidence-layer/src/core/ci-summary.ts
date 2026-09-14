@@ -13,15 +13,72 @@
  * signal anyone has for "never ran," and telling that apart from "checked,
  * found nothing" is the whole discipline this layer is built around.
  */
+import { summarise } from './cli'
+import type { Finding } from './cli'
+
 export const JSON_BEGIN = '---GOVERNANCE-JSON-BEGIN---'
 export const JSON_END = '---GOVERNANCE-JSON-END---'
+
+/**
+ * Bumped when the shape changes in a way a reader could notice.
+ *
+ * 1 - the original block.
+ * 2 - unchanged shape, emitted unconditionally rather than only on failure.
+ * 3 - findings carry `line`, and the optional `expected`/`observed` values.
+ */
+export const REPORT_SCHEMA = 3
+
+export interface ReportFinding {
+  level: string
+  claim: string
+  detail: string
+  file?: string
+  line?: number
+  expected?: unknown
+  observed?: unknown
+}
 
 export interface Report {
   schema: number
   mode: string
   generatedAt: string
   summary: string
-  findings: { level: string; claim: string; detail: string; file?: string }[]
+  findings: ReportFinding[]
+}
+
+/**
+ * Builds the report a check emits alongside its human output.
+ *
+ * Producer and consumer live in the same file deliberately. The block is a
+ * contract between two programs, and a contract whose two halves are written in
+ * different places drifts - which is exactly what had already happened: the
+ * delimiters were declared here *and* retyped as string literals in the script
+ * that emits them, so the only thing keeping them equal was that nobody had
+ * edited one of the two.
+ */
+export function buildReport(findings: Finding[], mode: string): Report {
+  return {
+    schema: REPORT_SCHEMA,
+    mode,
+    generatedAt: new Date().toISOString(),
+    summary: summarise(findings),
+    findings: findings.map((f) => ({
+      level: f.level,
+      claim: f.claim,
+      detail: f.detail,
+      file: f.file,
+      line: f.line,
+      expected: f.expected,
+      observed: f.observed,
+    })),
+  }
+}
+
+/** Prints the delimited block. The delimiters are why this is greppable in a CI log. */
+export function emitReport(findings: Finding[], mode: string): void {
+  console.log(JSON_BEGIN)
+  console.log(JSON.stringify(buildReport(findings, mode)))
+  console.log(JSON_END)
 }
 
 /** Pulls the machine-readable block out of a pile of console output. */

@@ -1,0 +1,31 @@
+$ tsx scripts/check-docs.ts
+
+README claims
+-------------
+[ ok ] README says the bot game is 474 pieces, 178 lines, level 18 (README.md:204)
+        the fixture fingerprint says 474 pieces, 178 lines, level 18
+[ ok ] README advertises the route / (README.md)
+        served by apps/web/app/pages/index.vue
+[ ok ] README advertises the route /play (README.md)
+        served by apps/web/app/pages/play.vue
+[ ok ] README advertises the route /debug (README.md)
+        served by apps/web/app/pages/debug.vue
+[ ok ] README says three is pinned to an exact version (apps/web/package.json)
+        apps/web/package.json says "0.185.1"
+[ ok ] README says @types/three is pinned to an exact version (apps/web/package.json)
+        apps/web/package.json says "0.185.4"
+[ ok ] README says @tresjs/core is pinned to an exact version (apps/web/package.json)
+        apps/web/package.json says "5.8.3"
+[ ok ] README says @tresjs/nuxt is pinned to an exact version (apps/web/package.json)
+        apps/web/package.json says "5.6.3"
+[FAIL] README says the build is 2.25 MB total (README.md)
+        measured 4.15 MB in apps/web/.output
+[ ok ] README says the suite has 71 tests (README.md:194)
+        the suite reports 71
+[ ok ] README says 71/71 green (README.md:227)
+        the suite reports 71 passing, exit 0
+
+11 checked - 1 failed, 0 flaky, 0 warnings, 0 unverifiable
+
+[ELIFECYCLE] Command failed with exit code 1.
+EXIT=1

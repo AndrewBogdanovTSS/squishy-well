@@ -24,19 +24,20 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { EXIT, exitCodeFor, parseArgs, report, run, usage } from 'evidence-layer'
+import { EXIT, emitReport, exitCodeFor, parseArgs, report, run, usage } from 'evidence-layer'
 import type { Finding } from 'evidence-layer'
 import { applyFlakyPolicy } from 'evidence-layer'
 import { measureDirSize, parseTestCount } from 'evidence-layer/adapters/node-default'
 
 const HELP = `
-pnpm check:docs [--repo <path>] [--skip test] [--strict]
+pnpm check:docs [--repo <path>] [--skip test] [--strict] [--json]
 
 Checks the numeric and structural claims the README makes about this repository.
 
   --repo    repository root (default: the repo this script lives in)
   --skip    comma-separated checks to skip: test, fixtures, routes, pins, build
   --strict  treat warnings and unverifiable results as failures
+  --json    also print the delimited machine-readable report block
 
 exit 0 = every checkable claim holds, 1 = at least one is wrong,
 3 = flaky (see journal.jsonl), 2 = bad usage
@@ -93,6 +94,8 @@ export function checkTestCount(repo: string, readme: string, lines: string[], he
       detail: 'the suite reports ' + actual,
       file: 'README.md',
       line: lineOf(lines, /(\d+) tests:/),
+      expected: n,
+      observed: actual,
     })
   }
   if (green) {
@@ -103,6 +106,8 @@ export function checkTestCount(repo: string, readme: string, lines: string[], he
       detail: 'the suite reports ' + actual + ' passing, exit ' + res.exitCode,
       file: 'README.md',
       line: lineOf(lines, /\d+\/\d+ green/),
+      expected: { passing: n, exitCode: 0 },
+      observed: { passing: actual, exitCode: res.exitCode },
     })
   }
   return applyFlakyPolicy(JOURNAL_PATH, 'check:docs/test-count', headSha, findings)
@@ -157,6 +162,8 @@ export function checkFixtureNumbers(repo: string, readme: string, lines: string[
         actual.level,
       file: 'README.md',
       line: lineOf(lines, /pieces, \d+ lines/),
+      expected: { pieces: claim[1], lines: claim[2], level: claim[3] },
+      observed: actual,
     },
   ]
 }
@@ -204,6 +211,8 @@ export function checkPinnedVersions(repo: string, readme: string): Finding[] {
       claim: 'README says ' + name + ' is pinned to an exact version',
       detail: 'apps/web/package.json says "' + version + '"',
       file: 'apps/web/package.json',
+      expected: 'an exact version',
+      observed: version,
     }
   })
 }
@@ -251,6 +260,8 @@ export function checkBuildSize(repo: string, readme: string): Finding[] {
       claim: 'README says the build is ' + claimed + ' MB total',
       detail: 'measured ' + mb.toFixed(2) + ' MB in apps/web/.output',
       file: 'README.md',
+      expected: claimed,
+      observed: Number(mb.toFixed(2)),
     },
   ]
 }
@@ -280,6 +291,10 @@ function main(): void {
   if (!skip.includes('test')) findings.push(...checkTestCount(repo, readme, lines, headSha))
 
   report('README claims', findings)
+  // Additive, never instead of. The text output is what a person reads and it
+  // does not change shape when a machine is also watching - a check that says
+  // something different depending on who is asking is not one check.
+  if (args.json === true) emitReport(findings, 'check:docs')
   process.exit(exitCodeFor(findings, args.strict === true))
 }
 

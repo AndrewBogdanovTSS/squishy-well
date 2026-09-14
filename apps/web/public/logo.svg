@@ -1,0 +1,37 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    PWA source icon for SQUISHY WELL. A 2x2 block (the O-piece) rendered in
+    the app's own two accent colours (accent #22d3ee, accent2 #c084fc, see
+    app.css) on the app's own background colour (bg #05070c) - reuses the
+    palette rather than inventing a new one for the icon alone.
+
+    Kept deliberately simple: an app icon has to read at 16px as well as
+    512px, so one bold, symmetric shape beats anything more detailed. The
+    block grid also sits well inside a maskable icon's safe zone (roughly
+    the inner 80 percent, ~205px radius from centre) - every drawn pixel
+    here is within a 240x240 box centred on the canvas, comfortably inside
+    that zone.
+  -->
+  <defs>
+    <linearGradient id="blockGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee" />
+      <stop offset="100%" stop-color="#c084fc" />
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="14" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" fill="#05070c" />
+
+  <g filter="url(#glow)">
+    <rect x="136" y="136" width="112" height="112" rx="18" fill="url(#blockGradient)" />
+    <rect x="264" y="136" width="112" height="112" rx="18" fill="url(#blockGradient)" />
+    <rect x="136" y="264" width="112" height="112" rx="18" fill="url(#blockGradient)" />
+    <rect x="264" y="264" width="112" height="112" rx="18" fill="url(#blockGradient)" />
+  </g>
+</svg>

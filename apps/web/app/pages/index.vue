@@ -13,18 +13,18 @@
         A guideline tetris with SRS kicks, lock delay and DAS/ARR, rendered on a WebGPU
         pipeline with compute-shader debris.
       </p>
-      <div class="flex gap-3 justify-center">
+      <div class="f-col gap-3 items-center">
         <nuxt-link
           to="/play"
-          class="no-underline b b-$accent c-$accent rounded-full py-2.8 px-8 tracking-title text-md bg-[rgb(var(--accent-rgb)/12%)]"
+          class="no-underline text-center w-56 b b-$accent c-$accent rounded-full py-2.8 px-8 tracking-title text-md bg-[rgb(var(--accent-rgb)/12%)]"
         >
           PLAY
         </nuxt-link>
         <nuxt-link
-          to="/debug"
-          class="no-underline b b-$border rounded-full py-2.8 px-8 tracking-title text-md c-$muted"
+          to="/settings"
+          class="no-underline text-center w-56 b b-$border rounded-full py-2.8 px-8 tracking-title text-md c-$muted"
         >
-          2D DEBUG
+          SETTINGS
         </nuxt-link>
       </div>
       <ul class="list-none p-0 m-0 mt-10 c-$muted text-sm leading-[1.9]">
