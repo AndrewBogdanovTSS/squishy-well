@@ -6,3 +6,6 @@ allowBuilds:
   esbuild: true
   sharp: true
   vue-demi: true
+
+minimumReleaseAgeExclude:
+  - evidence-layer@0.1.0

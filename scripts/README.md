@@ -1,14 +1,13 @@
 # scripts/
 
-What is left here is what genuinely cannot move into
-[`packages/evidence-layer/`](../packages/evidence-layer): this project's
-routes, its pinned versions, its fixture shape, which files gate its test
-suite, which checks this repo runs by default. Everything with **zero**
-project-specific logic - the claim linter, the receipt checker, the CI
-summary renderer, the journal reader and tagger - lives in that package's own
-[`bin/`](../packages/evidence-layer/bin), not here, so a project copying the
-package gets a working CLI without having to hand-write the same wrapper
-files themselves.
+What is left here is what genuinely cannot move into the
+[`evidence-layer`](https://github.com/AndrewBogdanovTSS/evidence-layer) package: this project's routes, its
+pinned versions, its fixture shape, which files gate its test suite, which
+checks this repo runs by default. Everything with **zero** project-specific
+logic - the claim linter, the receipt checker, the CI summary renderer, the
+reachability scan, the journal reader and tagger - ships in that package as a
+single executable, not here, so a project installing it gets a working CLI
+without hand-writing the same wrapper files.
 
 The full tour, with the reasoning: [`docs/evidence-layer.md`](../docs/evidence-layer.md).
 
@@ -20,10 +19,15 @@ The full tour, with the reasoning: [`docs/evidence-layer.md`](../docs/evidence-l
 | `governance.ts` | `pnpm check:all` | "this is enforced" - names which checks this repo runs by default |
 
 The other five commands (`check:claims`, `check:receipt`, `ci:summary`,
-`journal:report`, `journal:tag`) run straight out of
-[`packages/evidence-layer/bin/`](../packages/evidence-layer/bin) - see that
-folder's own file headers, and [`../packages/evidence-layer/README.md`](../packages/evidence-layer/README.md)
-for the "why here, not there" boundary.
+`journal:report`, `journal:tag`) are one-line aliases for the installed
+executable - `evidence-layer claims`, `evidence-layer receipt`,
+`evidence-layer ci-summary`, `evidence-layer journal report`,
+`evidence-layer journal tag`. The colon-separated names are kept because the
+invariants in `docs/decisions/` name them, and a record that says "enforced by
+`pnpm check:claims`" should keep resolving to something that runs.
+
+See the package's own README for the "why here, not there" boundary, and
+`npx evidence-layer --help` for the current command list.
 
 ## Conventions
 

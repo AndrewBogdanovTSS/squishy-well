@@ -4,13 +4,18 @@ Six commands, each turning one kind of claim into something that could be proved
 wrong, one that checks whether anything runs them, and a journal that gives the
 whole layer a clock.
 
-None of the checking logic is specific to a tetris game - it lives in
-[`packages/evidence-layer/`](../packages/evidence-layer), mirroring
-[`packages/tetris-core/`](../packages/tetris-core): a portable core, a thin
-Node-specific adapter, and this project's own config living in `scripts/` as
-plain arguments rather than a schema. See that package's own README for the
-portability contract and what "zero-config" does and does not cover. Copy any
-of it.
+None of the checking logic is specific to a tetris game, and since
+2026-09-14 it does not live here either: it was extracted to its own
+repository and published as the [`evidence-layer`](https://github.com/AndrewBogdanovTSS/evidence-layer) npm
+package, which this project now installs like any other dependency. The
+records that predate the move (`docs/decisions/`, `docs/phase0-audit.md`)
+still describe it at `packages/evidence-layer/`, which is where it was when
+they were written - they are dated records, not stale links.
+
+The shape is unchanged: a portable core, a thin Node-specific adapter, and
+this project's own config living in [`scripts/`](../scripts) as plain
+arguments rather than a schema. See the package's own README for the
+portability contract and what "zero-config" does and does not cover.
 
 **The rule every check below is graded against**: the honest path has to be
 cheaper than the convenient one - fewer tokens, fewer separate decisions, less

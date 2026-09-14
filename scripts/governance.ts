@@ -2,7 +2,7 @@
  * `pnpm check:all` - does anything actually run the checks?
  *
  * Thin wrapper: reachability, exceptions and the report format all live in
- * `evidence-layer` - see `packages/evidence-layer/src/core/governance.ts`.
+ * `evidence-layer` - see that package's own `src/core/governance.ts`.
  * This file supplies which checks this project runs by default, and where its
  * decision records and exceptions file live.
  *

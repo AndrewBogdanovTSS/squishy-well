@@ -16,7 +16,7 @@
  * routes, pinned versions and fixture shape. The generic pieces - argument
  * parsing, the outcome model, running a command, the flaky/journal policy -
  * come from the portable `evidence-layer` package; see
- * `packages/evidence-layer/README.md` for what "portable" actually covers.
+ * the `evidence-layer` package's own README for what "portable" covers.
  *
  * Exit codes: 0 every checkable claim holds - 1 at least one is wrong -
  * 3 flaky (the test-count check only) - 2 bad usage.

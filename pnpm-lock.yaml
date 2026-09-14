@@ -116,8 +116,8 @@ importers:
         specifier: ^10.9.1
         version: 10.9.1(jiti@2.7.0)(supports-color@10.2.2)
       evidence-layer:
-        specifier: workspace:*
-        version: link:packages/evidence-layer
+        specifier: ^0.1.0
+        version: 0.1.0
       tsx:
         specifier: ^4.23.13
         version: 4.23.13
@@ -185,21 +185,6 @@ importers:
       vue-tsc:
         specifier: ^3.3.11
         version: 3.3.11(typescript@5.9.3)
-
-  packages/evidence-layer:
-    devDependencies:
-      '@types/node':
-        specifier: ^26.4.0
-        version: 26.4.1
-      tsx:
-        specifier: ^4.23.13
-        version: 4.23.13
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-      vitest:
-        specifier: ^4.1.11
-        version: 4.1.11(@types/node@26.4.1)(@vitest/coverage-v8@4.1.11)(vite@8.2.2(@types/node@26.4.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.13))
 
   packages/tetris-core:
     devDependencies:
@@ -3853,6 +3838,11 @@ packages:
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
+
+  evidence-layer@0.1.0:
+    resolution: {integrity: sha512-mw/co0Q+3ODUHrXIneo3okWBkBDq6hdUCUf85ODNTevfDkw9enGmA2plfe1+FHAYQ2abx0M7mfjmUamV9NWmcA==}
+    engines: {node: '>=22'}
+    hasBin: true
 
   execa@8.0.1:
     resolution: {integrity: sha512-VyhnebXciFV2DESc+p6B+y0LjSm0krU4OgJN44qFAhBY0TJ+1V61tYD2+wHusZ6F9n5K+vl8k0sTy7PEfV4qpg==}
@@ -11111,6 +11101,8 @@ snapshots:
       - bare-abort-controller
 
   events@3.3.0: {}
+
+  evidence-layer@0.1.0: {}
 
   execa@8.0.1:
     dependencies:

@@ -4,7 +4,7 @@
  * Thin wrapper: the orchestration (working-tree guard, diff, running each
  * step, addressing every artifact, writing the skeleton) lives in
  * `evidence-layer`'s `gatherEvidence` - see
- * `packages/evidence-layer/src/core/gather.ts` for why the skeleton is
+ * the package's own `src/core/gather.ts` for why the skeleton is
  * mandatory, not a nicety. This file supplies the two things only this project
  * knows: which changed files make the engine suite worth running, and how to
  * scope lint to just the files that changed.

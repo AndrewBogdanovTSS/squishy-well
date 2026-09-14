@@ -42,7 +42,7 @@ sitting next to it. `check:claims` verifies that a real command was run and
 pointed at on purpose - it does not, and structurally cannot without
 reintroducing a probabilistic judgement into a deterministic checker, verify
 that the output *means* what the claim says it means. See
-`packages/evidence-layer/src/core/claims.ts`'s file header for why that
+the `evidence-layer` package's `src/core/claims.ts` file header for why that
 trade-off is deliberate rather than an oversight.
 
 ## Boundary 3 - the same opinion as Boundary 1, dressed as a check (the one failure)
